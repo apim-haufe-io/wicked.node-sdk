@@ -86,14 +86,15 @@ function initialize(awaitOptions, callback) {
                 return callback(new Error('GET /globals return unexpected error code: ' + res.statusCode));
             }
 
+            let globals = null;
             try {
-                const globals = getJson(body);
+                globals = getJson(body);
                 wickedStorage.globals = globals;
-
-                return callback(null, globals);
+                wickedStorage.initialized = true;
             } catch (ex) {
-                return callback(new Error('Parsing globals failed: ' + err.message));
+                return callback(new Error('Parsing globals failed: ' + ex.message));
             }
+            return callback(null, globals);
         });
     });
 }
