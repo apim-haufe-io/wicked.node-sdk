@@ -3,7 +3,9 @@
 var os = require('os');
 //var async = require('async');
 var debug = require('debug')('wicked-sdk');
-var request = require('request'); 
+var request = require('request');
+var qs = require('querystring');
+var uuid = require('node-uuid');
 
 // ====== VARIABLES ======
 
@@ -12,19 +14,33 @@ var request = require('request');
 // was used to access the portal API with.
 const wickedStorage = {
     initialized: false,
+    kongAdapterInitialized: false,
+    machineUserId: null,
     apiUrl: null,
     globals: null
 };
 
 // ======= SDK INTERFACE =======
 
+// ======= INITIALIZATION =======
+
 exports.initialize = function (awaitOptions, callback) {
     initialize(awaitOptions, callback);
+};
+
+exports.initMachineUser = function (serviceId, callback) {
+    initMachineUser(serviceId, callback);
 };
 
 exports.awaitUrl = function (url, options, callback) {
     awaitUrl(url, options, callback);
 };
+
+exports.awaitKongAdapter = function (awaitOptions, callback) {
+    awaitKongAdapter(awaitOptions, callback);
+};
+
+// ======= INFORMATION RETRIEVAL =======
 
 exports.getGlobals = function () {
     return getGlobals();
@@ -48,13 +64,60 @@ exports.getInternalKongAdminUrl = function () {
 
 exports.getInternalKongAdapterUrl = function () {
     return getInternalKongAdapterUrl();
-}; 
+};
+
+// ======= API FUNCTIONALITY =======
+
+exports.apiGet = function (urlPath, userId, callback) {
+    apiGet(urlPath, userId, callback);
+};
+
+exports.apiPost = function (urlPath, postBody, userId, callback) {
+    apiPost(urlPath, postBody, userId, callback);
+};
+
+exports.apiPut = function (urlPath, putBody, userId, callback) {
+    apiPut(urlPath, putBody, userId, callback);
+};
+
+exports.apiPatch = function (urlPath, patchBody, userId, callback) {
+    apiPatch(urlPath, patchBody, userId, callback);
+};
+
+exports.apiDelete = function (urlPath, userId, callback) {
+    apiDelete(urlPath, userId, callback);
+};
+
+// ======= OAUTH2 CONVENIENCE FUNCTIONS ======= 
+
+exports.getRedirectUriWithAccessToken = function (userInfo, callback) {
+    getRedirectUriWithAccessToken(userInfo, callback);
+};
+
+exports.getSubscriptionByClientId = function(clientId, apiId, callback) {
+    getSubscriptionByClientId(clientId, apiId, callback);
+};
+
+// ======= CORRELATION ID HANDLER =======
+
+exports.correlationIdHandler = function() {
+    return function (req, res, next) {
+        var correlationId = req.get('correlation-id');
+        if (correlationId) {
+            req.correlationId = correlationId; 
+            return next();
+        }
+
+        req.correlationId = uuid.v4();
+        return next();
+    };
+};
 
 // ======= IMPLEMENTATION ======
 
 function initialize(awaitOptions, callback) {
     debug('initialize()');
-    if (!callback && (typeof(awaitOptions) === 'function')) {
+    if (!callback && (typeof (awaitOptions) === 'function')) {
         callback = awaitOptions;
         awaitOptions = null;
     }
@@ -107,7 +170,7 @@ const DEFAULT_AWAIT_OPTIONS = {
 
 function awaitUrl(url, options, callback) {
     debug('awaitUrl(): ' + url);
-    if (!callback && (typeof(options) === 'function')) {
+    if (!callback && (typeof (options) === 'function')) {
         callback = options;
         options = null;
     }
@@ -135,6 +198,81 @@ function awaitUrl(url, options, callback) {
             return callback(err);
         }
         callback(null, body);
+    });
+}
+
+function awaitKongAdapter(awaitOptions, callback) {
+    debug('awaitKongAdapter()');
+    checkInitialized('awaitKongAdapter');
+    if (!callback && (typeof (awaitOptions) === 'function')) {
+        callback = awaitOptions;
+        awaitOptions = null;
+    }
+    if (awaitOptions) {
+        debug('awaitOptions:');
+        debug(awaitOptions);
+    }
+
+    const adapterPingUrl = getInternalKongAdapterUrl() + 'ping';
+    awaitUrl(adapterPingUrl, awaitOptions, function (err, body) {
+        if (err)
+            return callback(err);
+        wickedStorage.kongAdapterInitialized = true;
+        return callback(null, body);
+    });
+}
+
+function initMachineUser(serviceId, callback) {
+    debug('initMachineUser()');
+    checkInitialized('initMachineUser');
+
+    if (!/^[a-zA-Z\-_0-9]+$/.test(serviceId))
+        return callback(new Error('Invalid Service ID, must only contain a-z, A-Z, 0-9, - and _.'));
+
+    const customId = makeMachineUserCustomId(serviceId);
+    apiGet('users?customId=' + qs.escape(customId), function (err, userInfo) {
+        if (err && err.statusCode == 404) {
+            // Not found
+            return createMachineUser(serviceId, callback);
+        } else if (err) {
+            return callback(err);
+        }
+        if (!Array.isArray(userInfo))
+            return callback(new Error('GET of user with customId ' + customId + ' did not return expected array.'));
+        if (userInfo.length !== 1)
+            return callback(new Error('GET of user with customId ' + customId + ' did not return array of length 1 (length == ' + userInfo.length + ').'));
+        userInfo = userInfo[0]; // Pick the user from the list.
+        debug('Machine user info:');
+        debug(userInfo);
+        debug('Setting machine user id: ' + userInfo.id);
+        wickedStorage.machineUserId = userInfo.id;
+        return callback(null, userInfo);
+    });
+}
+
+function makeMachineUserCustomId(serviceId) {
+    const customId = 'internal:' + serviceId;
+    return customId;
+}
+
+function createMachineUser(serviceId, callback) {
+    const customId = makeMachineUserCustomId(serviceId);
+    const userInfo = {
+        customId: customId,
+        firstName: 'Machine-User',
+        lastName: serviceId,
+        email: serviceId + '@wicked.haufe.io',
+        validated: true,
+        groups: ['admin']
+    };
+    apiPost('users', userInfo, function (err, userInfo) {
+        if (err)
+            return callback(err);
+        debug('Machine user info:');
+        debug(userInfo);
+        debug('Setting machine user id: ' + userInfo.id);
+        wickedStorage.machineUserId = userInfo.id;
+        return callback(null, userInfo);
     });
 }
 
@@ -172,8 +310,8 @@ function getInternalKongAdminUrl() {
 
     if (wickedStorage.globals.network &&
         wickedStorage.globals.network.kongAdminUrl)
-        return wickedStorage.globals.network.kongAdminUrl;
-    return guessServiceUrl('kong', 8001);
+        return checkSlash(wickedStorage.globals.network.kongAdminUrl);
+    return checkSlash(guessServiceUrl('kong', 8001));
 }
 
 function getInternalKongAdapterUrl() {
@@ -182,8 +320,8 @@ function getInternalKongAdapterUrl() {
 
     if (wickedStorage.globals.network &&
         wickedStorage.globals.network.kongAdapterUrl)
-        return wickedStorage.globals.network.kongAdapterUrl;
-    return guessServiceUrl('portal-kong-adapter', 3002);
+        return checkSlash(wickedStorage.globals.network.kongAdapterUrl);
+    return checkSlash(guessServiceUrl('portal-kong-adapter', 3002));
 }
 
 // ======= UTILITY FUNCTIONS ======
@@ -218,7 +356,12 @@ function getApiHost() {
 
 function checkInitialized(callingFunction) {
     if (!wickedStorage.initialized)
-        throw new Error('Before calling ' + callingFunction + '(), initialize() must return successfully.');
+        throw new Error('Before calling ' + callingFunction + '(), initialize() must have been called and has to have returned successfully.');
+}
+
+function checkKongAdapterInitialized(callingFunction) {
+    if (!wickedStorage.kongAdapterInitialized)
+        throw new Error('Before calling ' + callingFunction + '(), awaitKongAdapter() must have been called and has to have returned successfully.');
 }
 
 function guessServiceUrl(defaultHost, defaultPort) {
@@ -287,4 +430,173 @@ function getJson(ob) {
     if (ob instanceof String || typeof ob === "string")
         return JSON.parse(ob);
     return ob;
+}
+
+function apiGet(urlPath, userId, callback) {
+    debug('apiGet(): ' + urlPath);
+    checkInitialized('apiGet');
+
+    apiAction('GET', urlPath, null, userId, callback);
+}
+
+function apiPost(urlPath, postBody, userId, callback) {
+    debug('apiGet(): ' + urlPath);
+    checkInitialized('apiPost');
+
+    apiAction('POST', urlPath, postBody, userId, callback);
+}
+
+function apiPut(urlPath, putBody, userId, callback) {
+    debug('apiPut(): ' + urlPath);
+    checkInitialized('apiPut');
+
+    apiAction('PUT', urlPath, putBody, userId, callback);
+}
+
+function apiPatch(urlPath, patchBody, userId, callback) {
+    debug('apiPatch(): ' + urlPath);
+    checkInitialized('apiPatch');
+
+    apiAction('PATCH', urlPath, patchBody, userId, callback);
+}
+
+function apiDelete(urlPath, userId, callback) {
+    debug('apiDelete(): ' + urlPath);
+    checkInitialized('apiDelete');
+
+    apiAction('DELETE', urlPath, null, userId, callback);
+}
+
+function apiAction(method, urlPath, actionBody, userId, callback) {
+    debug('apiAction(' + method + '): ' + urlPath);
+    if (actionBody)
+        debug(actionBody);
+
+    if (!callback && (typeof (userId) === 'function')) {
+        callback = userId;
+        userId = null;
+    }
+    if (!userId && wickedStorage.machineUserId) {
+        debug('Picking up machine user id: ' + wickedStorage.machineUserId);
+        userId = wickedStorage.machineUserId;
+    }
+
+    if (urlPath.startsWith('/'))
+        urlPath = urlPath.substring(1); // strip slash in beginning; it's in the API url
+
+    const url = getInternalApiUrl() + urlPath;
+    debug(method + ' ' + url);
+    const reqInfo = {
+        method: method,
+        url: url
+    };
+    if (method != 'DELETE' && 
+        method != 'GET') {
+        // DELETE and GET ain't got no body.
+        reqInfo.body = actionBody;
+        reqInfo.json = true;
+    }
+    if (userId)
+        reqInfo.headers = { 'X-UserId': userId };
+    request(reqInfo, function (err, res, body) {
+        if (err)
+            return callback(err);
+        if (res.statusCode > 299) {
+            // Looks bad
+            const err = new Error('api' + nice(method) + '() ' + urlPath + ' returned non-OK status code: ' + res.statusCode + ', check err.statusCode and err.res for details');
+            err.statusCode = res.statusCode;
+            err.res = res;
+            return callback(err);
+        }
+        if (res.statusCode !== 204) {
+            let jsonBody = null;
+            try {
+                jsonBody = getJson(body);
+            } catch (ex) {
+                return callback(new Error('api' + nice(method) + '() ' + urlPath + ' returned non-parseable JSON: ' + ex.message));
+            }
+            return callback(null, jsonBody);
+        } else {
+            // Empty response
+            return callback(null);
+        }
+    });
+}
+
+function nice(methodName) {
+    return methodName.substring(0, 1) + methodName.substring(1).toLowerCase();
+}
+
+// ====== OAUTH2 ======
+
+function getRedirectUriWithAccessToken(userInfo, callback) {
+    debug('getRedirectUriWithAccessToken()');
+    checkInitialized('getRedirectUriWithAccessToken');
+    checkKongAdapterInitialized('getRedirectUriWithAccessToken');
+
+    if (!userInfo.client_id)
+        return callback(new Error('client_id is mandatory'));
+    if (!userInfo.email)
+        return callback(new Error('email is mandatory'));
+    if (!userInfo.custom_id)
+        return callback(new Error('custom_id is mandatory'));
+    if (!userInfo.api_id)
+        return callback(new Error('api_id is mandatory'));
+    
+    const registerUrl = getInternalKongAdapterUrl() + 'oauth2/register';
+    request.post({
+        url: registerUrl,
+        json: true,
+        body: userInfo
+    }, function (err, res, body) {
+        if (err) {
+            debug('POST to ' + registerUrl + ' failed.');
+            debug(err);
+            return callback(err);
+        } else if (res.statusCode > 299) {
+            const err = new Error('POST to ' + registerUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.res and err.statusCode.');
+            err.statusCode = res.statusCode;
+            err.res = res;
+            return callback(err);
+        }
+        let jsonBody = null;
+        try {
+            jsonBody = getJson(body);
+        } catch (ex) {
+            const err = new Error('POST to ' + registerUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.res.');
+            err.res = res;
+            return callback(err);
+        }
+        return callback(null, jsonBody);
+    });
+}
+
+function getSubscriptionByClientId(clientId, apiId, callback) {
+    debug('getSubscriptionByClientId()');
+    checkInitialized('getSubscriptionByClientId');
+
+    // Validate format of clientId
+    if (!/^[a-zA-Z0-9\-]+$/.test(clientId)) {
+        return callback(new Error('Invalid client_id format.'));
+    }
+
+    // Check whether we know this client ID, otherwise we won't bother.
+    apiGet('subscriptions/' + qs.escape(clientId), function (err, subsInfo) {
+        if (err) {
+            debug('GET of susbcription for client_id ' + clientId + ' failed.');
+            debug(err);
+            return callback(new Error('Could not identify application with given client_id.'));
+        }
+        debug('subscription info:');
+        debug(subsInfo);
+        if (!subsInfo.subscription)
+            return callback(new Error('Could not successfully retrieve subscription information.'));
+        if (subsInfo.subscription.api != apiId) {
+            debug('subsInfo.api != apiId: ' + subsInfo.subscription.api + ' != ' + apiId);
+            return callback(new Error('Bad request. The client_id does not match the API.'));
+        }
+        debug('Successfully identified application: ' + subsInfo.subscription.application);
+
+        return callback(null, subsInfo);
+    });    
 }
