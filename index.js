@@ -503,9 +503,9 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
             return callback(err);
         if (res.statusCode > 299) {
             // Looks bad
-            const err = new Error('api' + nice(method) + '() ' + urlPath + ' returned non-OK status code: ' + res.statusCode + ', check err.statusCode and err.res for details');
+            const err = new Error('api' + nice(method) + '() ' + urlPath + ' returned non-OK status code: ' + res.statusCode + ', check err.statusCode and err.body for details');
             err.statusCode = res.statusCode;
-            err.res = res;
+            err.body = body;
             return callback(err);
         }
         if (res.statusCode !== 204) {
@@ -554,17 +554,21 @@ function getRedirectUriWithAccessToken(userInfo, callback) {
             debug(err);
             return callback(err);
         } else if (res.statusCode > 299) {
-            const err = new Error('POST to ' + registerUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.res and err.statusCode.');
+            const err = new Error('POST to ' + registerUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
+            debug('Unexpected status code.');
+            debug('Status Code: '  + res.statusCode);
+            debug('Body: ' + body);
             err.statusCode = res.statusCode;
-            err.res = res;
+            err.body = body;
             return callback(err);
         }
         let jsonBody = null;
         try {
             jsonBody = getJson(body);
+            debug(jsonBody);
         } catch (ex) {
-            const err = new Error('POST to ' + registerUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.res.');
-            err.res = res;
+            const err = new Error('POST to ' + registerUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.');
+            err.body = body;
             return callback(err);
         }
         return callback(null, jsonBody);
