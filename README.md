@@ -193,15 +193,10 @@ Main use case for this function is implementing Authorization Servers for use wi
 app.get('/authorize', function (req, res, next) {
     // You would get this information from your own IdP
     const userInfo = {
-        email: 'user@company.com',
-        custom_id: 'your-company-end-user-id-or-guid',
+        authenticated_userid: 'end-user-id',
         api_id: 'some-api',
         client_id: 'client-id-for-app-from-portal',
-        scope: ['scope1', 'scope2'],
-        headers: {
-            'X-Additional-Header': 'User Additional Info',
-            'X-Even-More-Headers': 'Super Interesting'
-        }
+        scope: ['scope1', 'scope2']
     };
     wicked.getRedirectUriWithAccessToken(userInfo, function (err, result) {
         if (err) {

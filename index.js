@@ -536,12 +536,10 @@ function getRedirectUriWithAccessToken(userInfo, callback) {
 
     if (!userInfo.client_id)
         return callback(new Error('client_id is mandatory'));
-    if (!userInfo.email)
-        return callback(new Error('email is mandatory'));
-    if (!userInfo.custom_id)
-        return callback(new Error('custom_id is mandatory'));
     if (!userInfo.api_id)
         return callback(new Error('api_id is mandatory'));
+    if (!userInfo.authenticated_userid)
+        return callback(new Error('authenticated_userid is mandatory'));
     
     const registerUrl = getInternalKongAdapterUrl() + 'oauth2/register';
     request.post({
