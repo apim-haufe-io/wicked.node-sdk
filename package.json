@@ -1,6 +1,6 @@
 {
   "name": "wicked-sdk",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "description": "node.js SDK for wicked.haufe.io",
   "keywords": [
     "api",
@@ -24,7 +24,8 @@
   "homepage": "https://github.com/Haufe-Lexware/wicked.node-sdk#readme",
   "dependencies": {
     "debug": "2.2.0", 
-    "request": "2.74.0" 
+    "request": "2.74.0",
+    "node-uuid": "1.4.7"
   },
   "jshintConfig": {
     "node": true, 

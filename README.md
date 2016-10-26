@@ -254,14 +254,54 @@ Returns a fully qualified URL to the portal API, as seen from inside the docker 
 
 **Note**: Will throw an exception if `initialize()` has not yet successfully finished.
 
-#### `wicked.getInternalKongAdminUrl()`
+#### `wicked.getInternalKongAdapterUrl()`
 
 Returns a fully qualified URL to the Kong Adapter API; same restrictions as above apply. Usually this is `http://portal-kong-adapter:3002`, but if you have overridden the setting in your environment, the content of the `globals.network.kongAdapterUrl` setting is returned (possibly depending on your running environment).
 
 **Note**: Will throw an exception if `initialize()` has not yet successfully finished.
 
-#### `wicked.getInternalKongAdapterUrl()`
+#### `wicked.getInternalKongAdminUrl()`
 
 Returns a fully qualified URL to the Kong Admin API, reachable **only** from within the docker network. Usually this is `http://kong:8001`, but if you have overridden the setting in your environment, the content of the `globals.network.kongAdminUrl` setting is returned (possibly depending on your running environment).
 
 **Note**: Will throw an exception if `initialize()` has not yet successfully finished.
+
+#### `wicked.getInternalChatbotUrl()`
+
+Returns a fully qualified URL to the Portal Chatbot, reachable **only** from within the docker network. Usually this is `http://portal-chatbot:3004`, but if you have overridden the setting in your environment, the content of the `globals.network.chatbotUrl` setting is returned (possibly depending on your running environment).
+
+**Note**: Will throw an exception if `initialize()` has not yet successfully finished.
+
+#### `wicked.getInternalMailerUrl()`
+
+Returns a fully qualified URL to the Portal Chatbot, reachable **only** from within the docker network. Usually this is `http://portal-mailer:3003`, but if you have overridden the setting in your environment, the content of the `globals.network.mailerUrl` setting is returned (possibly depending on your running environment).
+
+**Note**: Will throw an exception if `initialize()` has not yet successfully finished.
+
+#### `wicked.getInternalUrl(globalSettingsProperty)`
+
+Returns an arbitrary URL defined in the `globals.network` JSON configuration. You may use this to add other network settings to the `globals.json` and retrieve it using this mechanism. Please note that this function will throw an `Error` in case the property `globalSettingsProperty` cannot be found in the `networks` section of `globals.json`, whereas the other ones default to the docker container URLs as in the default configuration (e.g. `http://portal-chatbot:3004` etc. pp.).
+
+**Note**: Will throw an exception if `initialize()` has not yet successfully finished.
+
+### Convenience Functionality
+
+#### `wicked.correlationIdHandler()`
+
+The wicked SDK comes with a correlation ID handler you can use as an express middleware. It will do the following thing:
+
+* For incoming requests, check whether there is a header `correlation-id`, and if so, store that internally in the SDK, and in the `req.correlationId` property
+* If there is no such header, create a new GUID and store it as `req.correlationId` and internally in the SDK
+* For outgoing API calls (using any of the `api*()` functions), the correlation ID will be passed on as a `Correlation-Id` header
+
+Upstream wicked functionality will pick up this header and display it in logs.
+
+**Usage**:
+
+```javascript
+var wicked = require('wicked-sdk');
+var app = require('express')();
+
+app.use(wicked.correlationIdHandler());
+// ...
+```

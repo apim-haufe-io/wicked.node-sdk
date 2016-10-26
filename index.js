@@ -17,7 +17,8 @@ const wickedStorage = {
     kongAdapterInitialized: false,
     machineUserId: null,
     apiUrl: null,
-    globals: null
+    globals: null,
+    correlationId: null
 };
 
 // ======= SDK INTERFACE =======
@@ -66,6 +67,18 @@ exports.getInternalKongAdapterUrl = function () {
     return getInternalKongAdapterUrl();
 };
 
+exports.getInternalChatbotUrl = function () {
+    return getInternalChatbotUrl();
+};
+
+exports.getInternalMailerUrl = function () {
+    return getInternalMailerUrl();
+};
+
+exports.getInternalUrl = function (globalSettingsProperty) {
+    return getInternalUrl(globalSettingsProperty, null);
+};
+
 // ======= API FUNCTIONALITY =======
 
 exports.apiGet = function (urlPath, userId, callback) {
@@ -94,21 +107,23 @@ exports.getRedirectUriWithAccessToken = function (userInfo, callback) {
     getRedirectUriWithAccessToken(userInfo, callback);
 };
 
-exports.getSubscriptionByClientId = function(clientId, apiId, callback) {
+exports.getSubscriptionByClientId = function (clientId, apiId, callback) {
     getSubscriptionByClientId(clientId, apiId, callback);
 };
 
 // ======= CORRELATION ID HANDLER =======
 
-exports.correlationIdHandler = function() {
+exports.correlationIdHandler = function () {
     return function (req, res, next) {
         var correlationId = req.get('correlation-id');
         if (correlationId) {
-            req.correlationId = correlationId; 
-            return next();
+            debug('Picking up correlation id: ' + correlationId);
+            req.correlationId = correlationId;
+        } else {
+            req.correlationId = uuid.v4();
+            debug('Creating a new correlation id: ' + req.correlationId);
         }
-
-        req.correlationId = uuid.v4();
+        wickedStorage.correlationId = correlationId;
         return next();
     };
 };
@@ -308,20 +323,41 @@ function getInternalKongAdminUrl() {
     debug('getInternalKongAdminUrl()');
     checkInitialized('getInternalKongAdminUrl');
 
-    if (wickedStorage.globals.network &&
-        wickedStorage.globals.network.kongAdminUrl)
-        return checkSlash(wickedStorage.globals.network.kongAdminUrl);
-    return checkSlash(guessServiceUrl('kong', 8001));
+    return getInternalUrl('kongAdminUrl', 'kong', 8001);
+}
+
+function getInternalMailerUrl() {
+    debug('getInternalMailerUrl');
+    checkInitialized('getInternalMailerUrl');
+
+    return getInternalUrl('mailerUrl', 'portal-mailer', 3003);
+}
+
+function getInternalChatbotUrl() {
+    debug('getInternalChatbotUrl()');
+    checkInitialized('getInternalChatbotUrl');
+
+    return getInternalUrl('chatbotUrl', 'portal-chatbot', 3004);
 }
 
 function getInternalKongAdapterUrl() {
     debug('getInternalKongAdapterUrl()');
     checkInitialized('getInternalKongAdapterUrl');
 
+    return getInternalUrl('kongAdapterUrl', 'portal-kong-adapter', 3002);
+}
+
+function getInternalUrl(globalSettingsProperty, defaultHost, defaultPort) {
+    debug('getInternalUrl("' + globalSettingsProperty + '")');
+    checkInitialized('getInternalUrl');
+
     if (wickedStorage.globals.network &&
-        wickedStorage.globals.network.kongAdapterUrl)
-        return checkSlash(wickedStorage.globals.network.kongAdapterUrl);
-    return checkSlash(guessServiceUrl('portal-kong-adapter', 3002));
+        wickedStorage.globals.network.hasOwnProperty(globalSettingsProperty)) {
+        return checkSlash(wickedStorage.globals.network[globalSettingsProperty]);
+    }
+    if (defaultHost && defaultPort)
+        return checkSlash(guessServiceUrl(defaultHost, defaultPort));
+    throw new Error('Configuration property "' + globalSettingsProperty + '" not defined in globals.json: network.');
 }
 
 // ======= UTILITY FUNCTIONS ======
@@ -490,14 +526,20 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
         method: method,
         url: url
     };
-    if (method != 'DELETE' && 
+    if (method != 'DELETE' &&
         method != 'GET') {
         // DELETE and GET ain't got no body.
         reqInfo.body = actionBody;
         reqInfo.json = true;
     }
+    if (userId || wickedStorage.correlationId)
+        reqInfo.headers = {};
     if (userId)
-        reqInfo.headers = { 'X-UserId': userId };
+        reqInfo.headers['X-UserId'] = userId;
+    if (wickedStorage.correlationId) {
+        debug('Using correlation id: ' + wickedStorage.correlationId);
+        reqInfo.headers['Correlation-Id'] = wickedStorage.correlationId;
+    }
     request(reqInfo, function (err, res, body) {
         if (err)
             return callback(err);
@@ -540,7 +582,7 @@ function getRedirectUriWithAccessToken(userInfo, callback) {
         return callback(new Error('api_id is mandatory'));
     if (!userInfo.authenticated_userid)
         return callback(new Error('authenticated_userid is mandatory'));
-    
+
     const registerUrl = getInternalKongAdapterUrl() + 'oauth2/register';
     request.post({
         url: registerUrl,
@@ -554,7 +596,7 @@ function getRedirectUriWithAccessToken(userInfo, callback) {
         } else if (res.statusCode > 299) {
             const err = new Error('POST to ' + registerUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
             debug('Unexpected status code.');
-            debug('Status Code: '  + res.statusCode);
+            debug('Status Code: ' + res.statusCode);
             debug('Body: ' + body);
             err.statusCode = res.statusCode;
             err.body = body;
@@ -600,5 +642,5 @@ function getSubscriptionByClientId(clientId, apiId, callback) {
         debug('Successfully identified application: ' + subsInfo.subscription.application);
 
         return callback(null, subsInfo);
-    });    
+    });
 }
