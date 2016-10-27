@@ -54,6 +54,12 @@ The `initialize()` call will look for the Portal API URL in the following way:
 
 After initialization, you have the following functions you may call:
 
+#### `wicked.isDevelopmentMode()`
+
+Returns `true` if the wicked instance is running in development mode. This is assumed to be the case if and only if the specified `network.schema` in `globals.json` is **not** set to `https`.
+
+You may use this to enable certain behaviour in case your module is running on your local machine.
+
 #### `wicked.awaitUrl(url, [options,] callback)`
 
 Tries to reach the URL in `url` for a certain amount of times. If successful, it will return without an error, otherwise the callback will contain an error.

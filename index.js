@@ -29,6 +29,10 @@ exports.initialize = function (awaitOptions, callback) {
     initialize(awaitOptions, callback);
 };
 
+exports.isDevelopmentMode = function () {
+    return isDevelopmentMode();
+};
+
 exports.initMachineUser = function (serviceId, callback) {
     initMachineUser(serviceId, callback);
 };
@@ -175,6 +179,17 @@ function initialize(awaitOptions, callback) {
             return callback(null, globals);
         });
     });
+}
+
+function isDevelopmentMode() {
+    checkInitialized('isDevelopmentMode');
+
+    if (wickedStorage.globals && 
+        wickedStorage.globals.network &&
+        wickedStorage.globals.network.schema &&
+        wickedStorage.globals.network.schema === 'https')
+        return false;
+    return true;
 }
 
 const DEFAULT_AWAIT_OPTIONS = {
