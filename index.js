@@ -598,7 +598,7 @@ function getRedirectUriWithAccessToken(userInfo, callback) {
     if (!userInfo.authenticated_userid)
         return callback(new Error('authenticated_userid is mandatory'));
 
-    const registerUrl = getInternalKongAdapterUrl() + 'oauth2/register';
+    const registerUrl = getInternalKongAdapterUrl() + 'oauth2/token/implicit';
     request.post({
         url: registerUrl,
         json: true,

@@ -248,7 +248,7 @@ Returns the URL of the portal, the way it is reachable from the outside, e.g. us
 
 **Note**: Will throw an exception if `initialize()` has not yet successfully finished.
 
-#### `wicked.getExternalGatewayUrl()`
+#### `wicked.getExternalApiUrl()`
 
 Returns the URL of the API Gateway, the way it is reachable from the outside, e.g. usually from the public internet. This is a convenience method which uses information from the `globals.json` configuration to assemble the URL.
 
