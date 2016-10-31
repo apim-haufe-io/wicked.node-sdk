@@ -1,6 +1,6 @@
 {
   "name": "wicked-sdk",
-  "version": "0.10.9",
+  "version": "0.10.10",
   "description": "node.js SDK for wicked.haufe.io",
   "keywords": [
     "api",

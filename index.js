@@ -111,6 +111,26 @@ exports.getRedirectUriWithAccessToken = function (userInfo, callback) {
     getRedirectUriWithAccessToken(userInfo, callback);
 };
 
+exports.oauth2AuthorizeImplicit = function (userInfo, callback) {
+    oauth2AuthorizeImplicit(userInfo, callback);
+};
+
+exports.oauth2GetAccessTokenPasswordGrant = function (userInfo, callback) {
+    oauth2GetAccessTokenPasswordGrant(userInfo, callback);
+};
+
+exports.oauth2RefreshAccessToken = function (tokenInfo, callback) {
+    oauth2RefreshAccessToken(tokenInfo, callback);
+};
+
+exports.oauth2GetAccessTokenInfo = function (accessToken, callback) {
+    oauth2GetAccessTokenInfo(accessToken, callback);
+};
+
+exports.oauth2GetRefreshTokenInfo = function (refreshToken, callback) {
+    oauth2GetRefreshTokenInfo(refreshToken, callback);
+};
+
 exports.getSubscriptionByClientId = function (clientId, apiId, callback) {
     getSubscriptionByClientId(clientId, apiId, callback);
 };
@@ -586,30 +606,24 @@ function nice(methodName) {
 
 // ====== OAUTH2 ======
 
-function getRedirectUriWithAccessToken(userInfo, callback) {
-    debug('getRedirectUriWithAccessToken()');
-    checkInitialized('getRedirectUriWithAccessToken');
-    checkKongAdapterInitialized('getRedirectUriWithAccessToken');
-
-    if (!userInfo.client_id)
-        return callback(new Error('client_id is mandatory'));
-    if (!userInfo.api_id)
-        return callback(new Error('api_id is mandatory'));
-    if (!userInfo.authenticated_userid)
-        return callback(new Error('authenticated_userid is mandatory'));
-
-    const registerUrl = getInternalKongAdapterUrl() + 'oauth2/token/implicit';
-    request.post({
-        url: registerUrl,
-        json: true,
-        body: userInfo
-    }, function (err, res, body) {
+function kongAdapterAction(method, url, body, callback) {
+    const actionUrl = getInternalKongAdapterUrl() + url;
+    const reqBody = {
+        method: method,
+        url: actionUrl
+    };
+    if (method !== 'GET') {
+        reqBody.json = true;
+        reqBody.body = body;
+    }
+    request(reqBody, function (err, res, body) {
         if (err) {
-            debug('POST to ' + registerUrl + ' failed.');
+            debug(method + ' to ' + actionUrl + ' failed.');
             debug(err);
             return callback(err);
-        } else if (res.statusCode > 299) {
-            const err = new Error('POST to ' + registerUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
+        }
+        if (res.statusCode > 299) {
+            const err = new Error(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
             debug('Unexpected status code.');
             debug('Status Code: ' + res.statusCode);
             debug('Body: ' + body);
@@ -622,11 +636,95 @@ function getRedirectUriWithAccessToken(userInfo, callback) {
             jsonBody = getJson(body);
             debug(jsonBody);
         } catch (ex) {
-            const err = new Error('POST to ' + registerUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.');
+            const err = new Error(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.');
             err.body = body;
             return callback(err);
         }
         return callback(null, jsonBody);
+    });
+}
+
+function getRedirectUriWithAccessToken(userInfo, callback) {
+    debug('getRedirectUriWithAccessToken()');
+    oauth2AuthorizeImplicit(userInfo, callback);
+}
+
+function oauth2AuthorizeImplicit(userInfo, callback) {
+    debug('oauth2AuthorizeImplicit()');
+    checkInitialized('oauth2AuthorizeImplicit');
+    checkKongAdapterInitialized('oauth2AuthorizeImplicit');
+
+    if (!userInfo.client_id)
+        return callback(new Error('client_id is mandatory'));
+    if (!userInfo.api_id)
+        return callback(new Error('api_id is mandatory'));
+    if (!userInfo.authenticated_userid)
+        return callback(new Error('authenticated_userid is mandatory'));
+
+    kongAdapterAction('POST', 'oauth2/token/implicit', userInfo, function (err, redirectUri) {
+        if (err)
+            return callback(err);
+        callback(null, redirectUri);
+    });
+}
+
+function oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
+    debug('oauth2GetAccessTokenPasswordGrant()');
+    checkInitialized('oauth2GetAccessTokenPasswordGrant');
+    checkKongAdapterInitialized('oauth2GetAccessTokenPasswordGrant');
+
+    if (!userInfo.client_id)
+        return callback(new Error('client_id is mandatory'));
+    if (!userInfo.api_id)
+        return callback(new Error('api_id is mandatory'));
+    if (!userInfo.authenticated_userid)
+        return callback(new Error('authenticated_userid is mandatory'));
+
+    kongAdapterAction('POST', 'oauth2/token/password', userInfo, function (err, accessToken) {
+        if (err)
+            return callback(err);
+        callback(null, accessToken);
+    });
+}
+
+function oauth2RefreshAccessToken(tokenInfo, callback) {
+    debug('oauth2RefreshAccessToken');
+    checkInitialized('oauth2RefreshAccessToken');
+    checkKongAdapterInitialized('oauth2RefreshAccessToken');
+
+    if (!tokenInfo.refresh_token)
+        return callback(new Error('refresh_token is mandatory'));
+    if (!tokenInfo.client_id)
+        return callback(new Error('client_id is mandatory'));
+    
+    kongAdapterAction('POST', 'oauth2/token/refresh', tokenInfo, function (err, accessToken) {
+        if (err)
+            return callback(err);
+        callback(null, accessToken);
+    });
+}
+
+function oauth2GetAccessTokenInfo(accessToken, callback) {
+    debug('oauth2GetAccessTokenInfo()');
+    checkInitialized('oauth2GetAccessTokenInfo');
+    checkKongAdapterInitialized('oauth2GetAccessTokenInfo');
+
+    kongAdapterAction('GET', 'oauth2/token?access_token=' + qs.escape(accessToken), null, function (err, tokenInfo) {
+        if (err)
+            return callback(err);
+        callback(null, tokenInfo);
+    });
+}
+
+function oauth2GetRefreshTokenInfo(refreshToken, callback) {
+    debug('oauth2GetRefreshTokenInfo()');
+    checkInitialized('oauth2GetRefreshTokenInfo');
+    checkKongAdapterInitialized('oauth2GetRefreshTokenInfo');
+
+    kongAdapterAction('GET', 'oauth2/token?refresh_token=' + qs.escape(refreshToken), null, function (err, tokenInfo) {
+        if (err)
+            return callback(err);
+        callback(null, tokenInfo);
     });
 }
 

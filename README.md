@@ -185,9 +185,15 @@ Use `initMachineUser` to initialize a suitable user ID to use with your service.
 
 ### OAuth2 Functionality
 
-#### `wicked.getRedirectUriWithAccessToken(userInfo, callback)`
+#### `wicked.oauth2AuthorizeImplicit(userInfo, callback)`
 
-This is a convenience function which calls the `/oauth2/register` end point of the Kong Adapter, which registers an end user for use with an API which is configured to be accessed using the OAuth2 Implicit Grant Flow (authorization type `oauth2-implicit`).
+Alias: `getRedirectUriWithAccessToken`.
+
+This is a convenience function which calls the `/oauth2/register` end point of the Kong Adapter, which registers an end user for use with an API which is configured to be accessed using the OAuth2 Implicit Grant Flow (authorization type `oauth2` with "Implicit Grant" ticked). This is implemented in the Kong Adapter, and does the following checks before issuing an access token:
+
+* Does the given client (with the given `client_id`) have an active subscription to the given `api_id`?
+* Are the API and Application configured correctly (for use with the implicit grant)?
+* Make Kong create an access token/redirect URI
 
 If it succeeds, it will return an `application/json` type response containing a redirect URI for the registered application, giving the access token in the fragment of the redirect URI.
 
@@ -204,7 +210,7 @@ app.get('/authorize', function (req, res, next) {
         client_id: 'client-id-for-app-from-portal',
         scope: ['scope1', 'scope2']
     };
-    wicked.getRedirectUriWithAccessToken(userInfo, function (err, result) {
+    wicked.oauth2AuthorizeImplicit(userInfo, function (err, result) {
         if (err) {
             // Handle the error in a suitable way, at least
             return next(err);
@@ -219,6 +225,82 @@ app.get('/authorize', function (req, res, next) {
 ```
 
 For more and more detailed information, also regarding the meaning of the different properties of the `userInfo` object, see the wicked.haufe.io documentation, the section on Authorization Servers and the Kong Adapter. See also the [SAML SDK for wicked](https://www.npmjs.com/package/wicked-saml).
+
+#### `wicked.oauth2GetAccessTokenPasswordGrant(userInfo, callback)`
+
+For use in Authorization Server applications which want to create access tokens for use with the OAuth2 Resource Owner Password Grant. The actual implementation of the Username/Password check has to be done within your implementation of an Authorization Server. After you have done that, you can use this convenience end point to create an access token and a refresh token for use with your API.
+
+It takes a payload in `userInfo` like this (exactly as for the implicit grant above):
+
+```json
+{
+    "client_id": "client-id-for-app-from-portal",
+    "api_id": "some-api",
+    "authenticated_userid": "end-user-id",
+    "scope": ["scope1", "scope2"]
+}
+```
+
+This call goes to the Kong Adapter (which has to run in the same network as your implementation) and does the following things:
+
+* Does the given client (with the given `client_id`) have an active subscription to the given `api_id`?
+* Are the API and Application configured correctly (for use with the password grant)?
+* Make Kong create an access/refresh token
+
+#### `wicked.oauth2RefreshAccessToken(tokenInfo, callback)`
+
+For access/refresh tokens created e.g. with the above `oauth2GetAccessTokenPasswordGrant` function, you may use this convenience function to refresh an access token using the `refresh_token` grant. This will only work for APIs configured to be secured with OAuth 2.0, using either the Authorization Code Grant, or the Resource Owner Password Grant.
+
+Currently, the SDK only explicitly supports the Resource Owner Password Grant (may change in the future).
+
+Payload for `tokenInfo`:
+
+```json
+{
+    "client_id": "client-id-for-app-from-portal",
+    "refresh_token": "the-refresh-token-you-received"
+}
+```
+
+The Kong Adapter will perform the following actions:
+
+* Does the `client_id` still have a valid subscription to the API?
+* Is the API configured to grant refresh token requests?
+* Ask Kong to refresh the access token and issue a new access/refresh token pair.
+
+The previous refresh token will then be invalid, and the new refresh token needs to be used.
+
+#### `wicked.getAccessTokenInfo(accessToken, callback)`
+
+Retrieve information on an access token. Use this to get the information on the authenticated user back based on an access token. A typical use case for this is to find out whether a user is still entitled to use a specific API (authorization).
+
+Returns (a superset of):
+
+```json
+{
+    "authenticated_userid": "237982738273",
+    "authenticated_scope": ["scope1", "scope2"],
+    "access_token": "euro4598475983475984798584",
+    "refresh_token": "3048983094830958098r090tre098t0947touoi5454"
+}
+```
+
+#### `wicked.getRefreshTokenInfo(refreshToken, callback)`
+
+Retrieve information on an access token. Use this to get the information on the authenticated user back based on an access token. A typical use case for this is to find out whether a user is still entitled to use a specific API (authorization), e.g. before you issue a new pair of access/refresh tokens.
+
+The decision whether an end user (as opposed to the client) is allowed to continue using an API is entirely up to you, as the implementor of an Authorization Server; this has nothing to do with OAuth2 in general, but needs to be implemented depending on your use case.
+
+Returns (a superset of):
+
+```json
+{
+    "authenticated_userid": "237982738273",
+    "authenticated_scope": ["scope1", "scope2"],
+    "access_token": "euro4598475983475984798584",
+    "refresh_token": "3048983094830958098r090tre098t0947touoi5454"
+}
+```
 
 #### `wicked.getSubscriptionByClientId(clientId, apiId, callback)`
 
