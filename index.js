@@ -1,11 +1,10 @@
 'use strict';
 
-var os = require('os');
-//var async = require('async');
-var debug = require('debug')('wicked-sdk');
-var request = require('request');
-var qs = require('querystring');
-var uuid = require('node-uuid');
+const os = require('os');
+const debug = require('debug')('wicked-sdk');
+const request = require('request');
+const qs = require('querystring');
+const uuid = require('node-uuid');
 
 // ====== VARIABLES ======
 
@@ -139,7 +138,7 @@ exports.getSubscriptionByClientId = function (clientId, apiId, callback) {
 
 exports.correlationIdHandler = function () {
     return function (req, res, next) {
-        var correlationId = req.get('correlation-id');
+        const correlationId = req.get('correlation-id');
         if (correlationId) {
             debug('Picking up correlation id: ' + correlationId);
             req.correlationId = correlationId;
@@ -204,7 +203,7 @@ function initialize(awaitOptions, callback) {
 function isDevelopmentMode() {
     checkInitialized('isDevelopmentMode');
 
-    if (wickedStorage.globals && 
+    if (wickedStorage.globals &&
         wickedStorage.globals.network &&
         wickedStorage.globals.network.schema &&
         wickedStorage.globals.network.schema === 'https')
@@ -437,10 +436,10 @@ function checkKongAdapterInitialized(callingFunction) {
 
 function guessServiceUrl(defaultHost, defaultPort) {
     debug('guessServiceUrl() - defaultHost: ' + defaultHost + ', defaultPort: ' + defaultPort);
-    var url = 'http://' + defaultHost + ':' + defaultPort + '/';
+    let url = 'http://' + defaultHost + ':' + defaultPort + '/';
     // Are we not running on Linux? Then guess we're in local development mode.
     if (os.type() != 'Linux') {
-        let defaultLocalIP = getDefaultLocalIP();
+        const defaultLocalIP = getDefaultLocalIP();
         url = 'http://' + defaultLocalIP + ':' + defaultPort + '/';
     }
     debug(url);
@@ -448,7 +447,7 @@ function guessServiceUrl(defaultHost, defaultPort) {
 }
 
 function resolveApiUrl() {
-    var apiUrl = process.env.PORTAL_API_URL;
+    let apiUrl = process.env.PORTAL_API_URL;
     if (!apiUrl) {
         apiUrl = guessServiceUrl('portal-api', '3001');
         console.error('Environment variable PORTAL_API_URL is not set, defaulting to ' + apiUrl + '. If this is not correct, please set before starting this process.');
@@ -459,7 +458,7 @@ function resolveApiUrl() {
 }
 
 function getDefaultLocalIP() {
-    let localIPs = getLocalIPs();
+    const localIPs = getLocalIPs();
     if (localIPs.length > 0)
         return localIPs[0];
     return "localhost";
@@ -467,11 +466,11 @@ function getDefaultLocalIP() {
 
 function getLocalIPs() {
     debug('getLocalIPs()');
-    var interfaces = os.networkInterfaces();
-    var addresses = [];
-    for (var k in interfaces) {
-        for (var k2 in interfaces[k]) {
-            var address = interfaces[k][k2];
+    const interfaces = os.networkInterfaces();
+    const addresses = [];
+    for (let k in interfaces) {
+        for (let k2 in interfaces[k]) {
+            const address = interfaces[k][k2];
             if (address.family === 'IPv4' && !address.internal) {
                 addresses.push(address.address);
             }
@@ -484,7 +483,6 @@ function getLocalIPs() {
 function tryGet(url, statusCode, maxTries, tryCounter, timeout, callback) {
     debug('Try #' + tryCounter + ' to GET ' + url);
     request.get({ url: url }, function (err, res, body) {
-        var isOk = true;
         if (err || res.statusCode != statusCode) {
             if (tryCounter < maxTries || maxTries < 0)
                 return setTimeout(tryGet, timeout, url, statusCode, maxTries, tryCounter + 1, timeout, callback);
@@ -501,6 +499,12 @@ function getJson(ob) {
     if (ob instanceof String || typeof ob === "string")
         return JSON.parse(ob);
     return ob;
+}
+
+function getText(ob) {
+    if (ob instanceof String || typeof ob === "string")
+        return ob;
+    return JSON.stringify(ob, null, 2);
 }
 
 function apiGet(urlPath, userId, callback) {
@@ -586,13 +590,17 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
             return callback(err);
         }
         if (res.statusCode !== 204) {
-            let jsonBody = null;
+            const contentType = res.headers['content-type'];
+            let returnValue = null;
             try {
-                jsonBody = getJson(body);
+                if (contentType.startsWith('text'))
+                    returnValue = getText(body);
+                else
+                    returnValue = getJson(body);
             } catch (ex) {
                 return callback(new Error('api' + nice(method) + '() ' + urlPath + ' returned non-parseable JSON: ' + ex.message));
             }
-            return callback(null, jsonBody);
+            return callback(null, returnValue);
         } else {
             // Empty response
             return callback(null);
@@ -696,7 +704,7 @@ function oauth2RefreshAccessToken(tokenInfo, callback) {
         return callback(new Error('refresh_token is mandatory'));
     if (!tokenInfo.client_id)
         return callback(new Error('client_id is mandatory'));
-    
+
     kongAdapterAction('POST', 'oauth2/token/refresh', tokenInfo, function (err, accessToken) {
         if (err)
             return callback(err);
