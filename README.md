@@ -208,6 +208,7 @@ app.get('/authorize', function (req, res, next) {
         authenticated_userid: 'end-user-id',
         api_id: 'some-api',
         client_id: 'client-id-for-app-from-portal',
+        auth_server: 'your-auth-server-id',
         scope: ['scope1', 'scope2']
     };
     wicked.oauth2AuthorizeImplicit(userInfo, function (err, result) {
@@ -224,7 +225,13 @@ app.get('/authorize', function (req, res, next) {
 });
 ```
 
-For more and more detailed information, also regarding the meaning of the different properties of the `userInfo` object, see the wicked.haufe.io documentation, the section on Authorization Servers and the Kong Adapter. See also the [SAML SDK for wicked](https://www.npmjs.com/package/wicked-saml).
+The content of the `userInfo` structure:
+
+* `authenticated_userid`: This is one part of the payload of the token; in this property, pass in the user identity of the end user in **your** system (or the authenticating system). The backend API will receive this string (can contain mostly anything) as an `X-Authenticated-Userid` header when using the token to go through the API Gateway
+* `api_id`: The API for which an access token shall be created; this is used to verify that there actually is a subscription for the `client_id` to the `api_id`, and to retrieve some settings on the API (such as the request path). The `api_id` can either be hard coded or also passed in to your implementation, depending on your use case
+* `client_id`: This is the client ID of the calling application; this has to be passed in to your authorization server implementation from the outside
+* `auth_server`: Semi-optional -- use this to verify that the API for which the token is to be created actually is configured for use with an authorization server (the Kong Adapter will do this for you).  **IMPORTANT**: If you do not specify this, any authorization server may be used with any API, as long as it's configured for the implicit grant.
+* `scope`: For which scope shall the access token be created; this is the main task of an Authorization Server: Which scopes (e.g. rights) does the authenticated end user have in your API; if you use scopes, these also have to be configured in your `apis.json` configuration.
 
 #### `wicked.oauth2GetAccessTokenPasswordGrant(userInfo, callback)`
 
@@ -237,6 +244,7 @@ It takes a payload in `userInfo` like this (exactly as for the implicit grant ab
     "client_id": "client-id-for-app-from-portal",
     "api_id": "some-api",
     "authenticated_userid": "end-user-id",
+    "auth_server": "auth-server-id",
     "scope": ["scope1", "scope2"]
 }
 ```
@@ -246,6 +254,8 @@ This call goes to the Kong Adapter (which has to run in the same network as your
 * Does the given client (with the given `client_id`) have an active subscription to the given `api_id`?
 * Are the API and Application configured correctly (for use with the password grant)?
 * Make Kong create an access/refresh token
+
+The same as for the implicit grant applies: If you do not specify an `auth_server`, the Kong Adapter will **not** check whether the API is actually configured to use a specific authorization server, and will allow token creation using **any authorization server**.
 
 #### `wicked.oauth2RefreshAccessToken(tokenInfo, callback)`
 
@@ -258,7 +268,8 @@ Payload for `tokenInfo`:
 ```json
 {
     "client_id": "client-id-for-app-from-portal",
-    "refresh_token": "the-refresh-token-you-received"
+    "refresh_token": "the-refresh-token-you-received",
+    "auth_server": "auth-server-id",
 }
 ```
 
@@ -269,6 +280,8 @@ The Kong Adapter will perform the following actions:
 * Ask Kong to refresh the access token and issue a new access/refresh token pair.
 
 The previous refresh token will then be invalid, and the new refresh token needs to be used.
+
+The same as for the implicit grant applies: If you do not specify an `auth_server`, the Kong Adapter will **not** check whether the API is actually configured to use a specific authorization server, and will allow token creation using **any authorization server**.
 
 #### `wicked.getAccessTokenInfo(accessToken, callback)`
 

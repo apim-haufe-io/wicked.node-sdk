@@ -668,6 +668,8 @@ function oauth2AuthorizeImplicit(userInfo, callback) {
         return callback(new Error('api_id is mandatory'));
     if (!userInfo.authenticated_userid)
         return callback(new Error('authenticated_userid is mandatory'));
+    if (!userInfo.auth_server)
+        console.error('WARNING: wicked-sdk: oauth2AuthorizeImplicit() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
 
     kongAdapterAction('POST', 'oauth2/token/implicit', userInfo, function (err, redirectUri) {
         if (err)
@@ -687,6 +689,8 @@ function oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
         return callback(new Error('api_id is mandatory'));
     if (!userInfo.authenticated_userid)
         return callback(new Error('authenticated_userid is mandatory'));
+    if (!userInfo.auth_server)
+        console.error('WARNING: wicked-sdk: oauth2GetAccessTokenPasswordGrant() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
 
     kongAdapterAction('POST', 'oauth2/token/password', userInfo, function (err, accessToken) {
         if (err)
@@ -704,6 +708,8 @@ function oauth2RefreshAccessToken(tokenInfo, callback) {
         return callback(new Error('refresh_token is mandatory'));
     if (!tokenInfo.client_id)
         return callback(new Error('client_id is mandatory'));
+    if (!tokenInfo.auth_server)
+        console.error('WARNING: wicked-sdk: oauth2RefreshAccessToken() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
 
     kongAdapterAction('POST', 'oauth2/token/refresh', tokenInfo, function (err, accessToken) {
         if (err)
