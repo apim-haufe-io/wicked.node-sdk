@@ -233,6 +233,14 @@ The content of the `userInfo` structure:
 * `auth_server`: Semi-optional -- use this to verify that the API for which the token is to be created actually is configured for use with an authorization server (the Kong Adapter will do this for you).  **IMPORTANT**: If you do not specify this, any authorization server may be used with any API, as long as it's configured for the implicit grant.
 * `scope`: For which scope shall the access token be created; this is the main task of an Authorization Server: Which scopes (e.g. rights) does the authenticated end user have in your API; if you use scopes, these also have to be configured in your `apis.json` configuration.
 
+#### `wicked.oauth2GetAuthorizationCode(userInfo, callback)`
+
+**Version:** Works as of wicked 0.10.1.
+
+Works exactly like `wicked.oauth2AuthorizeImplicit()`, but you will not get back an access token directly, but rather an Authorization Code, which the client needs to use together with its `client_id` and `client_secret` with the API's `/oauth2/token` endpoint to actually retrieve an access token and refresh token.
+
+This is the implementation which is suitable for use with the OAuth2 Authoriazation Code Grant.
+
 #### `wicked.oauth2GetAccessTokenPasswordGrant(userInfo, callback)`
 
 For use in Authorization Server applications which want to create access tokens for use with the OAuth2 Resource Owner Password Grant. The actual implementation of the Username/Password check has to be done within your implementation of an Authorization Server. After you have done that, you can use this convenience end point to create an access token and a refresh token for use with your API.
@@ -282,6 +290,8 @@ The Kong Adapter will perform the following actions:
 The previous refresh token will then be invalid, and the new refresh token needs to be used.
 
 The same as for the implicit grant applies: If you do not specify an `auth_server`, the Kong Adapter will **not** check whether the API is actually configured to use a specific authorization server, and will allow token creation using **any authorization server**.
+
+If you have a trusted application, use the APIs `/oauth2/token` end point directly, and additionally pass in the `client_secret` into the request body.
 
 #### `wicked.getAccessTokenInfo(accessToken, callback)`
 

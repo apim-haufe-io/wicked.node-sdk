@@ -114,6 +114,10 @@ exports.oauth2AuthorizeImplicit = function (userInfo, callback) {
     oauth2AuthorizeImplicit(userInfo, callback);
 };
 
+exports.oauth2GetAuthorizationCode = function (userInfo, callback) {
+    oauth2GetAuthorizationCode(userInfo, callback);
+};
+
 exports.oauth2GetAccessTokenPasswordGrant = function (userInfo, callback) {
     oauth2GetAccessTokenPasswordGrant(userInfo, callback);
 };
@@ -672,6 +676,27 @@ function oauth2AuthorizeImplicit(userInfo, callback) {
         console.error('WARNING: wicked-sdk: oauth2AuthorizeImplicit() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
 
     kongAdapterAction('POST', 'oauth2/token/implicit', userInfo, function (err, redirectUri) {
+        if (err)
+            return callback(err);
+        callback(null, redirectUri);
+    });
+}
+
+function oauth2GetAuthorizationCode(userInfo, callback) {
+    debug('oauth2GetAuthorizationCode()');
+    checkInitialized('oauth2GetAuthorizationCode');
+    checkKongAdapterInitialized('oauth2GetAuthorizationCode');
+
+    if (!userInfo.client_id)
+        return callback(new Error('client_id is mandatory'));
+    if (!userInfo.api_id)
+        return callback(new Error('api_id is mandatory'));
+    if (!userInfo.authenticated_userid)
+        return callback(new Error('authenticated_userid is mandatory'));
+    if (!userInfo.auth_server)
+        console.error('WARNING: wicked-sdk: oauth2GetAuthorizationCode() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
+
+    kongAdapterAction('POST', 'oauth2/token/code', userInfo, function (err, redirectUri) {
         if (err)
             return callback(err);
         callback(null, redirectUri);
