@@ -23,12 +23,13 @@
   },
   "homepage": "https://github.com/Haufe-Lexware/wicked.node-sdk#readme",
   "dependencies": {
-    "debug": "2.2.0", 
+    "debug": "2.2.0",
+    "node-uuid": "1.4.7",
     "request": "2.74.0",
-    "node-uuid": "1.4.7"
+    "uuid": "^3.0.0"
   },
   "jshintConfig": {
-    "node": true, 
+    "node": true,
     "esversion": 6
-  } 
+  }
 }

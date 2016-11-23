@@ -4,7 +4,7 @@ const os = require('os');
 const debug = require('debug')('wicked-sdk');
 const request = require('request');
 const qs = require('querystring');
-const uuid = require('node-uuid');
+const uuid = require('uuid');
 
 // ====== VARIABLES ======
 
