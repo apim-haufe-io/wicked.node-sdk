@@ -17,15 +17,19 @@ const wickedStorage = {
     machineUserId: null,
     apiUrl: null,
     globals: null,
-    correlationId: null
+    correlationId: null,
+    configHash: null,
+    userAgent: null,
+    pendingExit: false,
+    apiReachable: false
 };
 
 // ======= SDK INTERFACE =======
 
 // ======= INITIALIZATION =======
 
-exports.initialize = function (awaitOptions, callback) {
-    initialize(awaitOptions, callback);
+exports.initialize = function (options, callback) {
+    initialize(options, callback);
 };
 
 exports.isDevelopmentMode = function () {
@@ -157,20 +161,27 @@ exports.correlationIdHandler = function () {
 
 // ======= IMPLEMENTATION ======
 
-function initialize(awaitOptions, callback) {
+function initialize(options, callback) {
     debug('initialize()');
-    if (!callback && (typeof (awaitOptions) === 'function')) {
-        callback = awaitOptions;
-        awaitOptions = null;
+    if (!callback && (typeof (options) === 'function')) {
+        callback = options;
+        options = null;
     }
-    if (awaitOptions) {
-        debug('awaitOptions:');
-        debug(awaitOptions);
+    if (options) {
+        debug('options:');
+        debug(options);
     }
 
+    const validationError = validateOptions(options);
+    if (validationError) {
+        return callback(validationError);
+    }
+
+    // I know, this would look a lot nicer with async or Promises,
+    // but I did not want to pull in additional dependencies.
     const apiUrl = resolveApiUrl();
     debug('Awaiting portal API at ' + apiUrl);
-    awaitUrl(apiUrl + 'ping', awaitOptions, function (err) {
+    awaitUrl(apiUrl + 'ping', options, function (err) {
         if (err) {
             debug('awaitUrl returned an error:');
             debug(err);
@@ -178,30 +189,107 @@ function initialize(awaitOptions, callback) {
         }
 
         wickedStorage.apiUrl = apiUrl;
+        if (options.userAgentName && options.userAgentVersion)
+            wickedStorage.userAgent = options.userAgentName + '/' + options.userAgentVersion;
         request.get({
-            url: apiUrl + 'globals'
+            url: apiUrl + 'confighash'
         }, function (err, res, body) {
             if (err) {
-                debug('GET /globals failed');
+                debug('GET /confighash failed');
                 debug(err);
                 return callback(err);
             }
-            if (res.statusCode !== 200) {
-                debug('GET /globals returned status code ' + res.statusCode);
-                return callback(new Error('GET /globals return unexpected error code: ' + res.statusCode));
+
+            if (200 != res.statusCode) {
+                debug('GET /confighash returned status code: ' + res.statusCode);
+                debug('Body: ' + body);
+                return callback(new Error('GET /confighash returned unexpected status code: ' + res.statusCode + ' (Body: ' + body + ')'));
             }
 
-            let globals = null;
-            try {
-                globals = getJson(body);
-                wickedStorage.globals = globals;
-                wickedStorage.initialized = true;
-            } catch (ex) {
-                return callback(new Error('Parsing globals failed: ' + ex.message));
-            }
-            return callback(null, globals);
+            wickedStorage.configHash = '' + body;
+
+            request.get({
+                url: apiUrl + 'globals',
+                headers: {
+                    'User-Agent': wickedStorage.userAgent,
+                    'X-Config-Hash': wickedStorage.configHash
+                }
+            }, function (err, res, body) {
+                if (err) {
+                    debug('GET /globals failed');
+                    debug(err);
+                    return callback(err);
+                }
+                if (res.statusCode !== 200) {
+                    debug('GET /globals returned status code ' + res.statusCode);
+                    return callback(new Error('GET /globals return unexpected error code: ' + res.statusCode));
+                }
+
+                let globals = null;
+                try {
+                    globals = getJson(body);
+                    wickedStorage.globals = globals;
+                    wickedStorage.initialized = true;
+                    wickedStorage.apiReachable = true;
+                } catch (ex) {
+                    return callback(new Error('Parsing globals failed: ' + ex.message));
+                }
+
+                // Success, set up config hash checker loop (if not switched off)
+                if (!options.doNotPollConfigHash) {
+                    setInterval(checkConfigHash, 10000);
+                }
+
+                return callback(null, globals);
+            });
         });
     });
+}
+
+function validateOptions(options) {
+    if ((options.userAgentName && !options.userAgentVersion) ||
+        (!options.userAgentName && options.userAgentVersion))
+        return new Error('You need to specify both userAgentName and userAgentVersion');
+    if (options.userAgentName &&
+        !/^[a-zA-Z\ \-\_\.0-9]+$/.test(options.userAgentName))
+        return new Error('The userAgentName must only contain characters a-z, A-Z, 0-9, -, _ and space.');
+    if (options.userAgentVersion &&
+        !/^[0-9\.]+$/.test(options.userAgentVersion))
+        return new Error('The userAgentVersion must only contain characters 0-9 and .');
+    return null;
+}
+
+function checkConfigHash() {
+    debug('checkConfigHash()');
+
+    request.get({
+        url: wickedStorage.apiUrl + 'confighash'
+    }, function (err, res, body) {
+        wickedStorage.apiReachable = false;
+        if (err) {
+            console.error('checkConfigHash(): An error occurred.');
+            console.error(err);
+            console.error(err.stack);
+            return;
+        }
+        if (200 !== res.statusCode) {
+            console.error('checkConfigHash(): Returned unexpected status code: ' + res.statusCode);
+            return;
+        }
+        wickedStorage.apiReachable = true;
+        const configHash = '' + body;
+
+        if (configHash !== wickedStorage.configHash) {
+            console.log('checkConfigHash() - Detected new configuration version, scheduling shutdown in 2 seconds.');
+            wickedStorage.pendingExit = true;
+            setTimeout(forceExit, 2000);
+        }
+    });
+}
+
+function forceExit() {
+    console.log('Exiting component due to outdated configuration (confighash mismatch).');
+    process.exit(0);
 }
 
 function isDevelopmentMode() {
@@ -487,7 +575,7 @@ function getLocalIPs() {
 function tryGet(url, statusCode, maxTries, tryCounter, timeout, callback) {
     debug('Try #' + tryCounter + ' to GET ' + url);
     request.get({ url: url }, function (err, res, body) {
-        if (err || res.statusCode != statusCode) {
+        if (err || res.statusCode !== statusCode) {
             if (tryCounter < maxTries || maxTries < 0)
                 return setTimeout(tryGet, timeout, url, statusCode, maxTries, tryCounter + 1, timeout, callback);
             debug('Giving up.');
@@ -548,6 +636,12 @@ function apiDelete(urlPath, userId, callback) {
 
 function apiAction(method, urlPath, actionBody, userId, callback) {
     debug('apiAction(' + method + '): ' + urlPath);
+
+    if (!wickedStorage.apiReachable)
+        return callback(new Error('The wicked API is currently not reachable. Try again later.'));
+    if (wickedStorage.pendingExit)
+        return callback(new Error('A shutdown due to changed configuration is pending.'));
+
     if (actionBody)
         debug(actionBody);
 
@@ -575,14 +669,20 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
         reqInfo.body = actionBody;
         reqInfo.json = true;
     }
-    if (userId || wickedStorage.correlationId)
-        reqInfo.headers = {};
+    // This is the config hash we saw at init; send it to make sure we don't
+    // run on an outdated configuration.
+    reqInfo.headers = { 'X-Config-Hash': wickedStorage.configHash };
     if (userId)
         reqInfo.headers['X-UserId'] = userId;
     if (wickedStorage.correlationId) {
         debug('Using correlation id: ' + wickedStorage.correlationId);
         reqInfo.headers['Correlation-Id'] = wickedStorage.correlationId;
     }
+    if (wickedStorage.userAgent) {
+        debug('Using User-Agent: ' + wickedStorage.userAgent);
+        reqInfo.headers['User-Agent'] = wickedStorage.userAgent;
+    }
+
     request(reqInfo, function (err, res, body) {
         if (err)
             return callback(err);

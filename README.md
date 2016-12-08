@@ -42,15 +42,27 @@ wicked.initialize(function (err) {
 
 ### Initialization Functionality
 
-#### `wicked.initialize([awaitOptions,] callback)`
+#### `wicked.initialize([options,] callback)`
 
-Waits for the wicked API to be available and returns a `null` error if successful, otherwise an error message. If you want to change the way the SDK waits for the Portal API, you may supply `awaitOptions` (see definition of `awaitUrl` below for a full description).
+Waits for the wicked API to be available and returns a `null` error if successful, otherwise an error message. If you want to change the way the SDK waits for the Portal API, you may supply `options` (see definition of `awaitUrl` below for a description of the await options).
+
+**New as of version 0.11.0**:
+
+The following options are supported in addition to the `awaitOptions` below:
+
+* `userAgentName`: The name of your component, e.g. `company.auth-server``
+* `userAgentVersion`: The version of your component, e.g. `1.2.3`
+* `doNotPollConfigHash`: Boolean value, set to `true` in order not to automatically shut down the component after a configuration hash has changed. This means you will have to reconfigure your component yourself; otherwise a restart would automatically do this (this is the default behavior which all wicked base components use).
+
+In case you use a `userAgentName` which starts with `wicked`, the version of your component **must** be the exact same version as the Portal API's version, otherwise any call to the wicked API will be rejected with a `428` status code (precondition failed/version mismatch).
 
 The `initialize()` call will look for the Portal API URL in the following way:
 
 * If the environment variable `PORTAL_API_URL` is set, this will be used
 * Otherwise, if the environment is Linux (where it assumes it runs in `docker`), it will default to `http://portal-api:3001`
 * Otherwise, if the environment is Windows or Mac, it will assume a local development environment, and use `http://localhost:3001` 
+
+**In case you need to work with a wicked installation prior to 0.11.0, please use the node SDK 0.10.13; a version 0.11.0 node SDK will not be compatible with a 0.10.x installation of wicked.!**
 
 After initialization, you have the following functions you may call:
 
@@ -131,6 +143,10 @@ Will return an `application/json` response containing (at least) the following i
 The `id` which is returned here has to be used in subsequent calls to the portal API to authorize the service to the portal API (in the `X-UserId` header).
 
 ### API Interaction
+
+**IMPORTANT**: As of version 0.11.0 of the wicked SDK, the SDK will continuously poll the `/confighash` end point of the portal API to detect configuration changes. Changes are detected by comparing the `confighash` retrieved at initialization (the SDK does this as a default) with the current value returned by `/confighash`. In case the values do not match, the SDK will **forcefully exit the entire node process in order to make the component restart and retrieve a new configuration**.
+
+In case you do not want this behavior, but rather would want to control yourself when to restart or reconfigure your component, specify `doNotPollConfigHash: true` in the initialization options (see above).
 
 #### `wicked.apiGet(urlPath, [userId,] callback)`
 
