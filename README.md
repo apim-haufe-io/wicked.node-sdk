@@ -363,6 +363,14 @@ Returns the content of the `globals.json` you deployed with your Portal API inst
 
 **Note**: Will throw an exception if `initialize()` has not yet successfully finished.
 
+#### `wicked.getConfigHash()`
+
+**Version requirement**: wicked SDK 0.11.1, wicked installation 0.11.0
+
+Returns the config hash which was retrieved at initialization. You may use this functionality to retrieve the config hash manually, in case you do not wish to use the SDK API functions but still want to make sure you are working against the correct configuration version (by passing a `X-Config-Hash` header manually).
+
+**Note**: Will throw an exception if `initialize()` has not yet successfully finished.
+
 #### `wicked.getExternalPortalUrl()`
 
 Returns the URL of the portal, the way it is reachable from the outside, e.g. usually from the public internet. This is a convenience method which uses information from the `globals.json` configuration to assemble the URL.

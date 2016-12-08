@@ -54,6 +54,10 @@ exports.getGlobals = function () {
     return getGlobals();
 };
 
+exports.getConfigHash = function () {
+    return getConfigHash();
+};
+
 exports.getExternalPortalUrl = function () {
     return getExternalPortalUrl();
 };
@@ -422,6 +426,13 @@ function getGlobals() {
     checkInitialized('getGlobals');
 
     return wickedStorage.globals;
+}
+
+function getConfigHash() {
+    debug('getConfigHash()');
+    checkInitialized('getConfigHash');
+
+    return wickedStorage.configHash;
 }
 
 function getExternalPortalUrl() {
