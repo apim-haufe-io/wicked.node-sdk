@@ -1,4 +1,4 @@
-FROM node:4
+FROM node:6-alpine
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
@@ -13,4 +13,3 @@ ARG NPM_EMAIL
 
 RUN echo User: $NPM_USER, Email: $NPM_EMAIL
 RUN npm-cli-login -u $NPM_USER -p $NPM_PASS -e $NPM_EMAIL && npm publish && npm logout
-
