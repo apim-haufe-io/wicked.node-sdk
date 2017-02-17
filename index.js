@@ -6,6 +6,10 @@ const request = require('request');
 const qs = require('querystring');
 const uuid = require('node-uuid');
 
+const WICKED_TIMEOUT = 2000; // request timeout for wicked API operations
+const KONG_TIMEOUT   = 5000; // request timeout for kong admin API operations
+const TRYGET_TIMEOUT = 2000; // request timeout for single calls in awaitUrl
+
 // ====== VARIABLES ======
 
 // Use this for local caching of things. Usually just the globals.
@@ -196,7 +200,8 @@ function initialize(options, callback) {
         if (options.userAgentName && options.userAgentVersion)
             wickedStorage.userAgent = options.userAgentName + '/' + options.userAgentVersion;
         request.get({
-            url: apiUrl + 'confighash'
+            url: apiUrl + 'confighash',
+            timeout: WICKED_TIMEOUT
         }, function (err, res, body) {
             if (err) {
                 debug('GET /confighash failed');
@@ -217,7 +222,8 @@ function initialize(options, callback) {
                 headers: {
                     'User-Agent': wickedStorage.userAgent,
                     'X-Config-Hash': wickedStorage.configHash
-                }
+                },
+                timeout: WICKED_TIMEOUT
             }, function (err, res, body) {
                 if (err) {
                     debug('GET /globals failed');
@@ -267,7 +273,8 @@ function checkConfigHash() {
     debug('checkConfigHash()');
 
     request.get({
-        url: wickedStorage.apiUrl + 'confighash'
+        url: wickedStorage.apiUrl + 'confighash',
+        timeout: WICKED_TIMEOUT
     }, function (err, res, body) {
         wickedStorage.apiReachable = false;
         if (err) {
@@ -585,7 +592,7 @@ function getLocalIPs() {
 
 function tryGet(url, statusCode, maxTries, tryCounter, timeout, callback) {
     debug('Try #' + tryCounter + ' to GET ' + url);
-    request.get({ url: url }, function (err, res, body) {
+    request.get({ url: url, timeout: TRYGET_TIMEOUT }, function (err, res, body) {
         if (err || res.statusCode !== statusCode) {
             if (tryCounter < maxTries || maxTries < 0)
                 return setTimeout(tryGet, timeout, url, statusCode, maxTries, tryCounter + 1, timeout, callback);
@@ -672,7 +679,8 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
     debug(method + ' ' + url);
     const reqInfo = {
         method: method,
-        url: url
+        url: url,
+        timeout: WICKED_TIMEOUT
     };
     if (method != 'DELETE' &&
         method != 'GET') {
@@ -733,7 +741,8 @@ function kongAdapterAction(method, url, body, callback) {
     const actionUrl = getInternalKongAdapterUrl() + url;
     const reqBody = {
         method: method,
-        url: actionUrl
+        url: actionUrl,
+        timeout: KONG_TIMEOUT
     };
     if (method !== 'GET') {
         reqBody.json = true;
