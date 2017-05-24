@@ -150,6 +150,14 @@ exports.getSubscriptionByClientId = function (clientId, apiId, callback) {
     getSubscriptionByClientId(clientId, apiId, callback);
 };
 
+exports.revokeAccessToken = function (accessToken, callback) {
+    revokeAccessToken(accessToken, callback);
+};
+
+exports.revokeAccessTokensByUserId = function (authenticatedUserId, callback) {
+    revokeAccessTokensByUserId(authenticatedUserId, callback);
+};
+
 // ======= CORRELATION ID HANDLER =======
 
 exports.correlationIdHandler = function () {
@@ -885,6 +893,22 @@ function oauth2GetRefreshTokenInfo(refreshToken, callback) {
             return callback(err);
         callback(null, tokenInfo);
     });
+}
+
+function revokeAccessToken(accessToken, callback) {
+    debug(`revokeAccessToken(${accessToken})`);
+    checkInitialized('revokeAccessToken()');
+    checkKongAdapterInitialized('revokeAccessToken()');
+
+    kongAdapterAction('DELETE', 'oauth2/token?access_token=' + qs.escape(accessToken), null, callback);
+}
+
+function revokeAccessTokensByUserId(authenticatedUserId, callback) {
+    debug(`revokeAccessTokenByUserId(${authenticatedUserId})`);
+    checkInitialized('revokeAccessTokenByUserId()');
+    checkKongAdapterInitialized('revokeAccessTokenByUserId()');
+    
+    kongAdapterAction('DELETE', 'oauth2/token?authenticated_userid=' + qs.escape(authenticatedUserId), null, callback);
 }
 
 function getSubscriptionByClientId(clientId, apiId, callback) {

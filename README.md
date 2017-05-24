@@ -341,6 +341,26 @@ Returns (a superset of):
 }
 ```
 
+#### `wicked.revokeAccessToken(accessToken, callback)`
+
+**Version:** Works as of wicked 0.11.6.
+
+Revokes an access token by access token string.
+
+After calling this (allow up to a second for the action to take effect), the access token will no longer be valid for calling an API via the API Gateway.
+
+This is useful for implementing a logout functionality.
+
+#### `wicked.revokeAccessTokenByUserId(authenticatedUserID, callback)`
+
+**Version:** Works as of wicked 0.11.6.
+
+Revokes all access tokens which were issued to `authenticatedUserId`.
+
+After calling this (allow up to a second for the action to take effect), the access tokens which were issued to the user with the `authenticatedUserId` will no longer be valid for calling an API via the API Gateway. By first retrieving all access tokens for the given user, all access tokens are sequentially deleted from the access token store. This can take a little while (allow 100ms per token).
+
+This is useful for implementing a logout functionality.
+
 #### `wicked.getSubscriptionByClientId(clientId, apiId, callback)`
 
 Convenience method which does the following:
