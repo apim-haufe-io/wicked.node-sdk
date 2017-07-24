@@ -7,7 +7,7 @@ const qs = require('querystring');
 const uuid = require('node-uuid');
 
 const WICKED_TIMEOUT = 2000; // request timeout for wicked API operations
-const KONG_TIMEOUT   = 5000; // request timeout for kong admin API operations
+const KONG_TIMEOUT = 5000; // request timeout for kong admin API operations
 const TRYGET_TIMEOUT = 2000; // request timeout for single calls in awaitUrl
 
 // ====== VARIABLES ======
@@ -25,7 +25,10 @@ const wickedStorage = {
     configHash: null,
     userAgent: null,
     pendingExit: false,
-    apiReachable: false
+    apiReachable: false,
+    // This field will not necessarily be filled.
+    apiVersion: null,
+    isV012OrHigher: false
 };
 
 // ======= SDK INTERFACE =======
@@ -197,11 +200,20 @@ function initialize(options, callback) {
     // but I did not want to pull in additional dependencies.
     const apiUrl = resolveApiUrl();
     debug('Awaiting portal API at ' + apiUrl);
-    awaitUrl(apiUrl + 'ping', options, function (err) {
+    awaitUrl(apiUrl + 'ping', options, function (err, pingResult) {
         if (err) {
             debug('awaitUrl returned an error:');
             debug(err);
             return callback(err);
+        }
+
+        debug('Ping result:');
+        debug(pingResult);
+        const pingJson = getJson(pingResult);
+        if (pingJson.version) {
+            // The version field is not filled until wicked 0.12.0
+            wickedStorage.apiVersion = pingJson.version;
+            wickedStorage.isV012OrHigher = true;
         }
 
         wickedStorage.apiUrl = apiUrl;
@@ -699,8 +711,14 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
     // This is the config hash we saw at init; send it to make sure we don't
     // run on an outdated configuration.
     reqInfo.headers = { 'X-Config-Hash': wickedStorage.configHash };
-    if (userId)
-        reqInfo.headers['X-UserId'] = userId;
+    if (userId) {
+        if (wickedStorage.isV012OrHigher) {
+            reqInfo.headers['X-Authenticated-UserId'] = userId;
+            reqInfo.headers['X-Authenticated-Scope'] = 'admin';
+        } else {
+            reqInfo.headers['X-UserId'] = userId;
+        }
+    }
     if (wickedStorage.correlationId) {
         debug('Using correlation id: ' + wickedStorage.correlationId);
         reqInfo.headers['Correlation-Id'] = wickedStorage.correlationId;
@@ -907,7 +925,7 @@ function revokeAccessTokensByUserId(authenticatedUserId, callback) {
     debug(`revokeAccessTokenByUserId(${authenticatedUserId})`);
     checkInitialized('revokeAccessTokenByUserId()');
     checkKongAdapterInitialized('revokeAccessTokenByUserId()');
-    
+
     kongAdapterAction('DELETE', 'oauth2/token?authenticated_userid=' + qs.escape(authenticatedUserId), null, callback);
 }
 

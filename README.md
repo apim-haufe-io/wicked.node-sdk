@@ -23,7 +23,7 @@ To install the SDK into your node.js application, run
 $ npm install wicked-sdk --save --save-exact
 ```
 
-The SDK will be kept downwards-compatible for as long as possible; it will be tried hard to make earlier versions of the SDK compatible with a later release of wicked.haufe.io, so using the `--save-exact` is a safe bet.
+The SDK will be kept downwards-compatible for as long as possible; it will be tried hard to make earlier versions of the SDK compatible with a later release of wicked.haufe.io, so using the `--save-exact` is a safe bet if you don't need newer features. **Note**: If you are using wicked >= 0.12.0, you will need to install this SDK in a version >= 0.12.0 as well. Everything else should behave as before though.
 
 ```javascript
 var wicked = require('wicked-sdk');
@@ -140,7 +140,7 @@ Will return an `application/json` response containing (at least) the following i
 }
 ```
 
-The `id` which is returned here has to be used in subsequent calls to the portal API to authorize the service to the portal API (in the `X-UserId` header).
+The `id` which is returned here has to be used in subsequent calls to the portal API to authorize the service to the portal API (in the `X-UserId` header for wicked <= 0.11.x, in 'X-Authenticated-UserId` for wicked >= 0.12.x).
 
 ### API Interaction
 
@@ -405,7 +405,7 @@ Returns the URL of the API Gateway, the way it is reachable from the outside, e.
 
 #### `wicked.getInternalApiUrl()`
 
-Returns a fully qualified URL to the portal API, as seen from inside the docker environment, usually this will be `http://portal:3001`. This is **not** an URL you can use from the outside, it's only intended for use within the same docker network as the Portal API. This is the same URL which was used to successfully connect to the API in the `initialization()` call.
+Returns a fully qualified URL to the portal API, as seen from inside the docker environment, usually this will be `http://portal-api:3001`. This is **not** an URL you can use from the outside, it's only intended for use within the same docker network as the Portal API. This is the same URL which was used to successfully connect to the API in the `initialization()` call.
 
 **Note**: Will throw an exception if `initialize()` has not yet successfully finished.
 
