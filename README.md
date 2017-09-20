@@ -169,7 +169,7 @@ wicked.apiGet('plans', function (err, results) {
 
 #### `wicked.apiPost(urlPath, postBody, [userId,] callback)`
 
-Issues a `GET` to the Portal API end point specified in `urlPath`, using the user ID passed in as `userId`. If `userId` is left out, the call is done without authentication. Check the API Swagger definition for details. The result of the API call is returned as the second parameter of the `callback` (node standard).
+Issues a `POST` to the Portal API end point specified in `urlPath`, using the user ID passed in as `userId`. If `userId` is left out, the call is done without authentication. Check the API Swagger definition for details. The result of the API call is returned as the second parameter of the `callback` (node standard).
 
 The function will callback with an error if a hard error occurred, or if the status code is larger than `299`. If the function fails due to an unexpected status code, details can be found in `err.statusCode` and `err.res`.
 
