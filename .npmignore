@@ -3,3 +3,4 @@
 Dockerfile-publish
 *.sh
 .DS_Store
+*.log

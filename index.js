@@ -18,6 +18,7 @@ const TRYGET_TIMEOUT = 2000; // request timeout for single calls in awaitUrl
 const wickedStorage = {
     initialized: false,
     kongAdapterInitialized: false,
+    kongOAuth2Initialized: false,
     machineUserId: null,
     apiUrl: null,
     globals: null,
@@ -55,6 +56,10 @@ exports.awaitKongAdapter = function (awaitOptions, callback) {
     awaitKongAdapter(awaitOptions, callback);
 };
 
+exports.awaitKongOAuth2 = function (awaitOptions, callback) {
+    awaitKongOAuth2(awaitOptions, callback);
+};
+
 // ======= INFORMATION RETRIEVAL =======
 
 exports.getGlobals = function () {
@@ -83,6 +88,10 @@ exports.getInternalKongAdminUrl = function () {
 
 exports.getInternalKongAdapterUrl = function () {
     return getInternalKongAdapterUrl();
+};
+
+exports.getInternalKongOAuth2Url = function () {
+    return getInternalKongOAuth2Url();
 };
 
 exports.getInternalChatbotUrl = function () {
@@ -160,6 +169,30 @@ exports.revokeAccessToken = function (accessToken, callback) {
 exports.revokeAccessTokensByUserId = function (authenticatedUserId, callback) {
     revokeAccessTokensByUserId(authenticatedUserId, callback);
 };
+
+// v1.0.0+ Methods, cannot be used with wicked <1.0.0, pre-release.
+const oauth2 = {
+    authorize: function (authRequest, callback) {
+        v1_oauth2Authorize(authRequest, callback);
+    },
+    token: function (tokenRequest, callback) {
+        v1_oauth2Token(tokenRequest, callback);
+    },
+    getAccessTokenInfo: function (accessToken, callback) {
+        v1_oauth2GetAccessTokenInfo(accessToken, callback);
+    },
+    getRefreshTokenInfo: function (refreshToken, callback) {
+        v1_oauth2GetRefreshTokenInfo(refreshToken, callback);
+    },
+    revokeAccessToken: function (accessToken, callback) {
+        v1_revokeAccessToken(accessToken, callback);
+    },
+    revokeAccessTokensByUserId: function (authenticatedUserId, callback) {
+        v1_revokeAccessTokensByUserId(authenticatedUserId, callback);
+    }
+};
+
+module.exports.oauth2 = oauth2;
 
 // ======= CORRELATION ID HANDLER =======
 
@@ -394,6 +427,27 @@ function awaitKongAdapter(awaitOptions, callback) {
     });
 }
 
+function awaitKongOAuth2(awaitOptions, callback) {
+    debug('awaitKongOAuth2()');
+    checkInitialized('awaitKongOAuth2');
+    if (!callback && (typeof (awaitOptions) === 'function')) {
+        callback = awaitOptions;
+        awaitOptions = null;
+    }
+    if (awaitOptions) {
+        debug('awaitOptions:');
+        debug(awaitOptions);
+    }
+
+    const oauth2PingUrl = getInternalKongOAuth2Url() + 'ping';
+    awaitUrl(oauth2PingUrl, awaitOptions, function (err, body) {
+        if (err)
+            return callback(err);
+        wickedStorage.kongOAuth2Initialized = true;
+        return callback(null, body);
+    });
+}
+
 function initMachineUser(serviceId, callback) {
     debug('initMachineUser()');
     checkInitialized('initMachineUser');
@@ -511,6 +565,13 @@ function getInternalKongAdapterUrl() {
     return getInternalUrl('kongAdapterUrl', 'portal-kong-adapter', 3002);
 }
 
+function getInternalKongOAuth2Url() {
+    debug('getInternalKongOAuth2Url()');
+    checkInitialized('getInternalKongOAuth2Url');
+
+    return getInternalUrl('kongOAuth2Url', 'portal-kong-oauth2', 3006);
+}
+
 function getInternalUrl(globalSettingsProperty, defaultHost, defaultPort) {
     debug('getInternalUrl("' + globalSettingsProperty + '")');
     checkInitialized('getInternalUrl');
@@ -562,6 +623,11 @@ function checkInitialized(callingFunction) {
 function checkKongAdapterInitialized(callingFunction) {
     if (!wickedStorage.kongAdapterInitialized)
         throw new Error('Before calling ' + callingFunction + '(), awaitKongAdapter() must have been called and has to have returned successfully.');
+}
+
+function checkKongOAuth2Initialized(callingFunction) {
+    if (!wickedStorage.kongOAuth2Initialized)
+        throw new Error('Before calling ' + callingFunction + '(), awaitKongOAuth2() must have been called and has to have returned successfully.');
 }
 
 function guessServiceUrl(defaultHost, defaultPort) {
@@ -957,4 +1023,101 @@ function getSubscriptionByClientId(clientId, apiId, callback) {
 
         return callback(null, subsInfo);
     });
+}
+
+function kongOAuth2Action(method, url, body, errorOnUnexpectedStatusCode, callback) {
+    const actionUrl = getInternalKongOAuth2Url() + url;
+    const reqBody = {
+        method: method,
+        url: actionUrl,
+        timeout: KONG_TIMEOUT
+    };
+    if (method !== 'GET') {
+        reqBody.json = true;
+        reqBody.body = body;
+    }
+    request(reqBody, function (err, res, body) {
+        if (err) {
+            debug(method + ' to ' + actionUrl + ' failed.');
+            debug(err);
+            return callback(err);
+        }
+        if (errorOnUnexpectedStatusCode) {
+            if (res.statusCode > 299) {
+                const err = new Error(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
+                debug('Unexpected status code.');
+                debug('Status Code: ' + res.statusCode);
+                debug('Body: ' + body);
+                err.statusCode = res.statusCode;
+                err.body = body;
+                return callback(err);
+            }
+        }
+        let jsonBody = null;
+        try {
+            jsonBody = getJson(body);
+            debug(jsonBody);
+        } catch (ex) {
+            const err = new Error(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.');
+            err.body = body;
+            return callback(err);
+        }
+        return callback(null, jsonBody);
+    });
+}
+
+function v1_oauth2Authorize(authRequest, callback) {
+    debug('v1_oauth2Authorize()');
+    checkInitialized('v1_oauth2Authorize()');
+    checkKongOAuth2Initialized('v1_oauth2Authorize()');
+
+    kongOAuth2Action('POST', 'oauth2/authorize', authRequest, false, callback);
+}
+
+function v1_oauth2Token(tokenRequest, callback) {
+    debug('v1_oauth2Token()');
+    checkInitialized('v1_oauth2Token()');
+    checkKongOAuth2Initialized('v1_oauth2Token()');
+
+    kongOAuth2Action('POST', 'oauth2/token', tokenRequest, false, callback);
+}
+
+function v1_oauth2GetAccessTokenInfo(accessToken, callback) {
+    debug('v1_oauth2GetAccessTokenInfo()');
+    checkInitialized('v1_oauth2GetAccessTokenInfo');
+    checkKongOAuth2Initialized('v1_oauth2GetAccessTokenInfo');
+
+    kongOAuth2Action('GET', 'oauth2_tokens?access_token=' + qs.escape(accessToken), null, true, function (err, tokenInfo) {
+        if (err)
+            return callback(err);
+        callback(null, tokenInfo);
+    });
+}
+
+function v1_oauth2GetRefreshTokenInfo(refreshToken, callback) {
+    debug('v1_oauth2GetRefreshTokenInfo()');
+    checkInitialized('v1_oauth2GetRefreshTokenInfo');
+    checkKongOAuth2Initialized('v1_oauth2GetRefreshTokenInfo');
+
+    kongOAuth2Action('GET', 'oauth2_tokens?refresh_token=' + qs.escape(refreshToken), null, true, function (err, tokenInfo) {
+        if (err)
+            return callback(err);
+        callback(null, tokenInfo);
+    });
+}
+
+function v1_revokeAccessToken(accessToken, callback) {
+    debug(`v1_revokeAccessToken(${accessToken})`);
+    checkInitialized('v1_revokeAccessToken()');
+    checkKongOAuth2Initialized('v1_revokeAccessToken');
+
+    kongOAuth2Action('DELETE', 'oauth2_tokens?access_token=' + qs.escape(accessToken), null, true, callback);
+}
+
+function v1_revokeAccessTokensByUserId(authenticatedUserId, callback) {
+    debug(`v1_revokeAccessTokensByUserId(${authenticatedUserId})`);
+    checkInitialized('v1_revokeAccessTokensByUserId()');
+    checkKongOAuth2Initialized('v1_revokeAccessTokensByUserId');
+
+    kongOAuth2Action('DELETE', 'oauth2_tokens?authenticated_userid=' + qs.escape(authenticatedUserId), null, true, callback);
 }
