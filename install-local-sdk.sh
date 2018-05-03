@@ -30,22 +30,24 @@ echo "INFO: wicked-sdk v${sdkVersion}"
 
 rm -f install-local-sdk.log
 
-npm install
-npm pack
+npm install > /dev/null
+packageFile=$(npm pack)
+echo "INFO: Package file: ${packageFile}"
 
 pushd .. > /dev/null
 
+# Leaving out: wicked.portal-kong-oauth2 - that repository
+# will be rationalized away, it's getting too complicated
 for dir in wicked.portal \
     wicked.portal-mailer \
     wicked.portal-chatbot \
-    wicked.portal-kong-oauth2 \
     wicked.portal-auth \
     wicked.portal-kong-adapter; do
 
     echo "INFO: Installing node-sdk into $dir"
 
     pushd $dir > /dev/null
-    npm install ../wicked.node-sdk/wicked-sdk-${sdkVersion}.tgz >> ../wicked.node-sdk/install-local-sdk.log 2>&1
+    npm install ../wicked.node-sdk/${packageFile} >> ../wicked.node-sdk/install-local-sdk.log 2>&1
     popd > /dev/null
 done
 
