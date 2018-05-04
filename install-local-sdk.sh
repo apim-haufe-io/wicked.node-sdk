@@ -47,9 +47,14 @@ for dir in wicked.portal \
     echo "INFO: Installing node-sdk into $dir"
 
     pushd $dir > /dev/null
-    npm install ../wicked.node-sdk/${packageFile} >> ../wicked.node-sdk/install-local-sdk.log 2>&1
+    cp -f ../wicked.node-sdk/${packageFile} ./wicked-sdk.tgz
+    npm install wicked-sdk.tgz >> ../wicked.node-sdk/install-local-sdk.log 2>&1
     popd > /dev/null
 done
+# Make sure the package is in the portal-env directory as well, as it's
+# needed when building the docker image.
+echo "INFO: Copying ${packageFile} to wicked.portal-env"
+cp -f ./wicked.node-sdk/${packageFile} ./wicked.portal-env/wicked-sdk.tgz
 
 popd > /dev/null # ..
 popd > /dev/null # currentDir
