@@ -29,7 +29,9 @@ const wickedStorage = {
     apiReachable: false,
     // This field will not necessarily be filled.
     apiVersion: null,
-    isV012OrHigher: false
+    isV012OrHigher: false,
+    isV100OrHigher: false,
+    portalApiScope: null
 };
 
 // ======= SDK INTERFACE =======
@@ -82,6 +84,10 @@ exports.getInternalApiUrl = function () {
     return getInternalApiUrl();
 };
 
+exports.getPortalApiScope = function () {
+    return getPortalApiScope();
+}
+
 exports.getInternalKongAdminUrl = function () {
     return getInternalKongAdminUrl();
 };
@@ -108,23 +114,48 @@ exports.getInternalUrl = function (globalSettingsProperty) {
 
 // ======= API FUNCTIONALITY =======
 
-exports.apiGet = function (urlPath, userId, callback) {
-    apiGet(urlPath, userId, callback);
+exports.apiGet = function (urlPath, userIdOrCallback, callback) {
+    let userId = userIdOrCallback;
+    if (!callback && typeof(userIdOrCallback) === 'function') {
+        callback = userIdOrCallback;
+        userId = null;
+    }
+    apiGet(urlPath, userId, null, callback);
 };
 
-exports.apiPost = function (urlPath, postBody, userId, callback) {
+exports.apiPost = function (urlPath, postBody, userIdOrCallback, callback) {
+    let userId = userIdOrCallback;
+    if (!callback && typeof(userIdOrCallback) === 'function') {
+        callback = userIdOrCallback;
+        userId = null;
+    }
     apiPost(urlPath, postBody, userId, callback);
 };
 
-exports.apiPut = function (urlPath, putBody, userId, callback) {
+exports.apiPut = function (urlPath, putBody, userIdOrCallback, callback) {
+    let userId = userIdOrCallback;
+    if (!callback && typeof(userIdOrCallback) === 'function') {
+        callback = userIdOrCallback;
+        userId = null;
+    }
     apiPut(urlPath, putBody, userId, callback);
 };
 
-exports.apiPatch = function (urlPath, patchBody, userId, callback) {
+exports.apiPatch = function (urlPath, patchBody, userIdOrCallback, callback) {
+    let userId = userIdOrCallback;
+    if (!callback && typeof(userIdOrCallback) === 'function') {
+        callback = userIdOrCallback;
+        userId = null;
+    }
     apiPatch(urlPath, patchBody, userId, callback);
 };
 
-exports.apiDelete = function (urlPath, userId, callback) {
+exports.apiDelete = function (urlPath, userIdOrCallback, callback) {
+    let userId = userIdOrCallback;
+    if (!callback && typeof(userIdOrCallback) === 'function') {
+        callback = userIdOrCallback;
+        userId = null;
+    }
     apiDelete(urlPath, userId, callback);
 };
 
@@ -247,6 +278,9 @@ function initialize(options, callback) {
             // The version field is not filled until wicked 0.12.0
             wickedStorage.apiVersion = pingJson.version;
             wickedStorage.isV012OrHigher = true;
+            if (pingJson.version >= '1.0.0') {
+                wickedStorage.isV100OrHigher = true;
+            }
         }
 
         wickedStorage.apiUrl = apiUrl;
@@ -451,12 +485,22 @@ function awaitKongOAuth2(awaitOptions, callback) {
 function initMachineUser(serviceId, callback) {
     debug('initMachineUser()');
     checkInitialized('initMachineUser');
+    retrieveOrCreateMachineUser(serviceId, (err, userInfo) => {
+        if (err)
+            return callback(err);
+        // wickedStorage.machineUserId has been filled now;
+        // now we want to retrieve the API scopes of portal-api.
+        return initPortalApiScopes(callback);
+    });
+}
 
+function retrieveOrCreateMachineUser(serviceId, callback) {
+    debug('retrieveOrCreateMachineUser()');
     if (!/^[a-zA-Z\-_0-9]+$/.test(serviceId))
         return callback(new Error('Invalid Service ID, must only contain a-z, A-Z, 0-9, - and _.'));
 
     const customId = makeMachineUserCustomId(serviceId);
-    apiGet('users?customId=' + qs.escape(customId), function (err, userInfo) {
+    apiGet('users?customId=' + qs.escape(customId), null, 'read_users', function (err, userInfo) {
         if (err && err.statusCode == 404) {
             // Not found
             return createMachineUser(serviceId, callback);
@@ -468,12 +512,16 @@ function initMachineUser(serviceId, callback) {
         if (userInfo.length !== 1)
             return callback(new Error('GET of user with customId ' + customId + ' did not return array of length 1 (length == ' + userInfo.length + ').'));
         userInfo = userInfo[0]; // Pick the user from the list.
-        debug('Machine user info:');
-        debug(userInfo);
-        debug('Setting machine user id: ' + userInfo.id);
-        wickedStorage.machineUserId = userInfo.id;
+        storeMachineUser(userInfo);
         return callback(null, userInfo);
     });
+}
+
+function storeMachineUser(userInfo) {
+    debug('Machine user info:');
+    debug(userInfo);
+    debug('Setting machine user id: ' + userInfo.id);
+    wickedStorage.machineUserId = userInfo.id;
 }
 
 function makeMachineUserCustomId(serviceId) {
@@ -491,14 +539,33 @@ function createMachineUser(serviceId, callback) {
         validated: true,
         groups: ['admin']
     };
-    apiPost('users', userInfo, function (err, userInfo) {
+    apiPost('users/machine', userInfo, null, function (err, userInfo) {
         if (err)
             return callback(err);
-        debug('Machine user info:');
-        debug(userInfo);
-        debug('Setting machine user id: ' + userInfo.id);
-        wickedStorage.machineUserId = userInfo.id;
+        storeMachineUser(userInfo);
         return callback(null, userInfo);
+    });
+}
+
+function initPortalApiScopes(callback) {
+    debug('initPortalApiScopes()');
+    if (!wickedStorage.machineUserId)
+        return callback(new Error('initPortalApiScopes: Machine user id not initialized.'));
+    apiGet('apis/portal-api', null, 'read_apis', (err, apiInfo) => {
+        if (err)
+            return callback(err);
+        debug(apiInfo);
+        if (!apiInfo.settings)
+            return callback(new Error('initPortalApiScope: Property settings not found.'));
+        if (!apiInfo.settings.scopes)
+            return callback(new Error('initPortalApiScope: Property settings.scopes not found.'));
+        const scopeList = [];
+        for (let scope in apiInfo.settings.scopes) {
+            scopeList.push(scope);
+        }
+        wickedStorage.portalApiScope = scopeList.join(' ');
+        debug(`initPortalApiScopes: Full API Scope: "${wickedStorage.portalApiScope}"`);
+        return callback(null);
     });
 }
 
@@ -535,6 +602,16 @@ function getInternalApiUrl() {
     checkInitialized('getInternalApiUrl');
 
     return checkSlash(wickedStorage.apiUrl);
+}
+
+function getPortalApiScope() {
+    debug('getPortalApiScope()');
+    checkInitialized('getPortalApiScope');
+
+    if (wickedStorage.isV100OrHigher && wickedStorage.portalApiScope)
+        return wickedStorage.portalApiScope;
+    debug('WARNING: portalApiScope is not defined, or wicked API is <1.0.0');
+    return '';
 }
 
 function getInternalKongAdminUrl() {
@@ -703,56 +780,74 @@ function getText(ob) {
     return JSON.stringify(ob, null, 2);
 }
 
-function apiGet(urlPath, userId, callback) {
+function apiGet(urlPath, userId, scope, callback) {
     debug('apiGet(): ' + urlPath);
     checkInitialized('apiGet');
+    if (arguments.length !== 4)
+        throw new Error('apiGet was called with wrong number of arguments');
 
-    apiAction('GET', urlPath, null, userId, callback);
+    apiAction('GET', urlPath, null, userId, scope, callback);
 }
 
 function apiPost(urlPath, postBody, userId, callback) {
-    debug('apiGet(): ' + urlPath);
+    debug('apiPost(): ' + urlPath);
     checkInitialized('apiPost');
+    if (arguments.length !== 4)
+        throw new Error('apiPost was called with wrong number of arguments');
 
-    apiAction('POST', urlPath, postBody, userId, callback);
+    apiAction('POST', urlPath, postBody, userId, null, callback);
 }
 
 function apiPut(urlPath, putBody, userId, callback) {
     debug('apiPut(): ' + urlPath);
     checkInitialized('apiPut');
+    if (arguments.length !== 4)
+        throw new Error('apiPut was called with wrong number of arguments');
 
-    apiAction('PUT', urlPath, putBody, userId, callback);
+    apiAction('PUT', urlPath, putBody, userId, null, callback);
 }
 
 function apiPatch(urlPath, patchBody, userId, callback) {
     debug('apiPatch(): ' + urlPath);
     checkInitialized('apiPatch');
+    if (arguments.length !== 4)
+        throw new Error('apiPatch was called with wrong number of arguments');
 
-    apiAction('PATCH', urlPath, patchBody, userId, callback);
+    apiAction('PATCH', urlPath, patchBody, userId, null, callback);
 }
 
 function apiDelete(urlPath, userId, callback) {
     debug('apiDelete(): ' + urlPath);
     checkInitialized('apiDelete');
+    if (arguments.length !== 3)
+        throw new Error('apiDelete was called with wrong number of arguments');
 
-    apiAction('DELETE', urlPath, null, userId, callback);
+    apiAction('DELETE', urlPath, null, userId, null, callback);
 }
 
-function apiAction(method, urlPath, actionBody, userId, callback) {
+function apiAction(method, urlPath, actionBody, userId, scope, callback) {
     debug('apiAction(' + method + '): ' + urlPath);
+    if (arguments.length !== 6)
+        throw new Error('apiAction called with wrong number of arguments');
+    if (typeof(callback) !== 'function')
+        throw new Error('apiAction: callback is not a function');
 
     if (!wickedStorage.apiReachable)
         return callback(new Error('The wicked API is currently not reachable. Try again later.'));
     if (wickedStorage.pendingExit)
         return callback(new Error('A shutdown due to changed configuration is pending.'));
 
+    if (!scope) {
+        if (wickedStorage.portalApiScope)
+            scope = wickedStorage.portalApiScope;
+        else
+            scope = '';
+    }
+    debug(`apiAction: Using scope ${scope}`);
+
     if (actionBody)
         debug(actionBody);
 
-    if (!callback && (typeof (userId) === 'function')) {
-        callback = userId;
-        userId = null;
-    }
     if (!userId && wickedStorage.machineUserId) {
         debug('Picking up machine user id: ' + wickedStorage.machineUserId);
         userId = wickedStorage.machineUserId;
@@ -780,10 +875,12 @@ function apiAction(method, urlPath, actionBody, userId, callback) {
     if (userId) {
         if (wickedStorage.isV012OrHigher) {
             reqInfo.headers['X-Authenticated-UserId'] = userId;
-            reqInfo.headers['X-Authenticated-Scope'] = 'admin';
         } else {
             reqInfo.headers['X-UserId'] = userId;
         }
+    }
+    if (wickedStorage.isV100OrHigher) {
+        reqInfo.headers['X-Authenticated-Scope'] = scope;
     }
     if (wickedStorage.correlationId) {
         debug('Using correlation id: ' + wickedStorage.correlationId);
@@ -1005,7 +1102,7 @@ function getSubscriptionByClientId(clientId, apiId, callback) {
     }
 
     // Check whether we know this client ID, otherwise we won't bother.
-    apiGet('subscriptions/' + qs.escape(clientId), function (err, subsInfo) {
+    apiGet('subscriptions/' + qs.escape(clientId), null, null, function (err, subsInfo) {
         if (err) {
             debug('GET of susbcription for client_id ' + clientId + ' failed.');
             debug(err);
