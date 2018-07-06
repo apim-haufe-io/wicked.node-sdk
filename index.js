@@ -72,8 +72,20 @@ exports.getConfigHash = function () {
     return getConfigHash();
 };
 
+exports.getSchema = function() {
+    return getSchema();
+};
+
+exports.getExternalPortalHost = function () {
+    return getExternalPortalHost();
+};
+
 exports.getExternalPortalUrl = function () {
     return getExternalPortalUrl();
+};
+
+exports.getExternalApiHost = function () {
+    return getExternalGatewayHost();
 };
 
 exports.getExternalApiUrl = function () {
@@ -583,11 +595,25 @@ function getConfigHash() {
     return wickedStorage.configHash;
 }
 
+function getExternalPortalHost() {
+    debug('getExternalPortalHost()');
+    checkInitialized('getExternalPortalHost');
+
+    return checkNoSlash(getPortalHost());
+}
+
 function getExternalPortalUrl() {
     debug('getExternalPortalUrl()');
     checkInitialized('getExternalPortalUrl');
 
     return checkSlash(getSchema() + '://' + getPortalHost());
+}
+
+function getExternalGatewayHost() {
+    debug('getExternalGatewayHost()');
+    checkInitialized('getExternalGatewayHost()');
+
+    return checkNoSlash(getApiHost());
 }
 
 function getExternalGatewayUrl() {
@@ -670,7 +696,14 @@ function checkSlash(someUrl) {
     return someUrl + '/';
 }
 
+function checkNoSlash(someUrl) {
+    if (someUrl.endsWith('/'))
+        return someUrl.substring(0, someUrl.length - 1);
+    return someUrl;
+}
+
 function getSchema() {
+    checkInitialized('getSchema');
     if (wickedStorage.globals.network &&
         wickedStorage.globals.network.schema)
         return wickedStorage.globals.network.schema;
