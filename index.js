@@ -98,7 +98,7 @@ exports.getInternalApiUrl = function () {
 
 exports.getPortalApiScope = function () {
     return getPortalApiScope();
-}
+};
 
 exports.getInternalKongAdminUrl = function () {
     return getInternalKongAdminUrl();

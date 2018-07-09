@@ -48,7 +48,11 @@ for dir in wicked.portal \
 
     pushd $dir > /dev/null
     cp -f ../wicked.node-sdk/${packageFile} ./wicked-sdk.tgz
-    npm install wicked-sdk.tgz >> ../wicked.node-sdk/install-local-sdk.log 2>&1
+    if [ "$1" = "--copy" ]; then
+        echo "INFO: Just copying node-sdk, npm install has to be run later."
+    else
+        npm install wicked-sdk.tgz >> ../wicked.node-sdk/install-local-sdk.log 2>&1
+    fi
     popd > /dev/null
 done
 # Make sure the package is in the portal-env directory as well, as it's
