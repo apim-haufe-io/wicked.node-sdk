@@ -6,6 +6,8 @@ const request = require('request');
 const qs = require('querystring');
 const uuid = require('node-uuid');
 
+import { WickedError } from "./wicked-error";
+
 const WICKED_TIMEOUT = 2000; // request timeout for wicked API operations
 const KONG_TIMEOUT = 5000; // request timeout for kong admin API operations
 const TRYGET_TIMEOUT = 2000; // request timeout for single calls in awaitUrl
@@ -36,210 +38,639 @@ const wickedStorage = {
 
 // ======= SDK INTERFACE =======
 
+// ====================
+// INTERNAL TYPES
+// ====================
+
+interface RequestBody {
+    method: string,
+    url: string,
+    timeout?: number,
+    json?: boolean,
+    body?: any
+}
+
+// ====================
+// WICKED TYPES
+// ====================
+
+export interface WickedAwaitOptions {
+    statusCode?: number,
+    maxTries?: number,
+    retryDelay?: number
+}
+
+export interface WickedInitOptions extends WickedAwaitOptions {
+    userAgentName: string,
+    userAgentVersion: string,
+    doNotPollConfigHash?: boolean
+}
+
+export interface WickedGlobals {
+    version: number,
+    title: string,
+    footer: string,
+    company: string,
+    // Group validated users are automatically assigned to
+    validatedUsergGroup?: string,
+    // Used to validate that the secret config key is correct
+    configKeyCheck: string,
+    api?: WickedGlobalsApi
+    network: WickedGlobalsNetwork,
+    db: WickedGlobalsDb,
+
+    sessionStore: WickedSessionStoreConfig,
+    kongAdapter?: WickedKongAdapterConfig,
+    portal: WickedPortalConfig,
+    storage: WickedStorageConfig,
+
+    initialUsers: WickedGlobalsInitialUser[],
+    recaptcha: WickedRecaptchaConfig
+    mailer: WickedMailerConfig
+    chatbot: WickedChatbotConfig,
+    layouts?: WickedLayoutConfig
+    views?: WickedViewsConfig
+}
+
+export interface WickedStorageConfig {
+    type: WickedStorageType
+    pgHost?: string
+    pgPort?: number,
+    pgUser?: string,
+    pgPassword?: string
+}
+
+export enum WickedStorageType {
+    JSON = 'json',
+    Postgres = 'postgres'
+}
+
+export interface WickedPortalConfig {
+    // Array of allowed auth methods for the portal login; in the form
+    // <auth server name>:<auth method name>,
+    // Example: ["default:local", "default:google"]
+    authMethods: string[]
+}
+
+export interface WickedKongAdapterConfig {
+    useKongAdapter: boolean,
+    // List of Kong plugins which the Kong Adapter doesn't touch when configuring Kong
+    ignoreList: string[]
+}
+
+export interface WickedSessionStoreConfig {
+    type: WickedSessionStoreType
+    host?: string,
+    port?: number,
+    password?: string
+}
+
+export enum WickedSessionStoreType {
+    Redis = 'redis',
+    File = 'file'
+}
+
+export interface WickedViewsConfig {
+    apis: {
+        showApiIcon: boolean,
+        titleTagline: string
+    },
+    applications: {
+        titleTagline: string
+    },
+    application: {
+        titleTagline: string
+    }
+}
+
+export interface WickedLayoutConfig {
+    defautRootUrl: string,
+    defautRootUrlTarget: string,
+    defautRootUrlText: null,
+    menu: {
+      homeLinkText: string,
+      apisLinkVisibleToGuest: boolean,
+      applicationsLinkVisibleToGuest: boolean,
+      contactLinkVisibleToGuest: boolean,
+      contentLinkVisibleToGuest: boolean,
+      classForLoginSignupPosition: string,
+      showSignupLink: boolean,
+      loginLinkText: string
+    },
+    footer: {
+      showBuiltBy: boolean,
+      showBuilds: boolean
+    },
+    swaggerUi: {
+      menu: {
+        homeLinkText: string,
+        showContactLink: boolean,
+        showContentLink: boolean
+      }
+    }
+}
+
+export interface WickedChatbotConfig {
+    username: string,
+    icon_url: string,
+    hookUrls: string[],
+    events: WickedChatbotEventsConfig
+}
+
+export interface WickedChatbotEventsConfig {
+    userSignedUp: boolean,
+    userValidatedEmail: boolean,
+    applicationAdded: boolean,
+    applicationDeleted: boolean,
+    subscriptionAdded: boolean,
+    subscriptionDeleted: boolean,
+    approvalRequired: boolean,
+    lostPasswordRequest: boolean,
+    verifyEmailRequest: boolean
+}
+
+export interface WickedMailerConfig {
+    senderEmail: string,
+    senderName: string,
+    smtpHost: string,
+    smtpPort?: number,
+    username?: string,
+    password?: string,
+    adminEmail: string,
+    adminName: string
+}
+
+export interface WickedRecaptchaConfig {
+    useRecaptcha: boolean,
+    websiteKey: string,
+    secretKey: string
+}
+
+export interface WickedGlobalsApi {
+    headerName: string
+}
+
+export interface WickedGlobalsNetwork {
+    schema: string,
+    portalHost: string,
+    apiHost: string,
+    apiUrl: string,
+    portalUrl: string,
+    kongAdapterUrl: string,
+    kongAdminUrl: string,
+    mailerUrl: string,
+    chatbotUrl: string
+}
+
+export interface WickedGlobalsDb {
+    staticConfig: string,
+    dynamicConfig?: string
+}
+
+export interface WickedGlobalsInitialUser {
+    id: string,
+    customId?: string,
+    name: string
+    email: string,
+    password?: string,
+    validated?: boolean,
+    groups: string[]
+}
+
+export interface WickedUserInfo {
+    id: string,
+    customId?: string,
+    email?: string,
+    password?: string,
+    validated?: boolean,
+    groups: string[]
+}
+
+export interface WickedUserCreateInfo {
+    customId?: string,
+    email: string,
+    password?: string,
+    validated: boolean,
+    groups: string[]
+}
+
+export interface WickedApi {
+    id: string,
+    name: string,
+    desc: string,
+    auth: string,
+    authServers?: string[],
+    authMethods?: string[],
+    registrationPool?: string,
+    requiredGroup?: string,
+    settings: WickedApiSettings
+}
+
+export interface WickedApiSettings {
+    enable_client_credentials?: boolean,
+    enable_implicit_grant?: boolean,
+    enable_authorization_code?: boolean,
+    enable_password_grant?: boolean,
+    token_expiration?: string,
+    scopes: WickedApiScopes,
+    tags: string[],
+    plans: string[],
+    internal?: boolean
+}
+
+export interface WickedApiScopes {
+    [scope: string]: {
+        description: string
+    }
+}
+
+export interface WickedScopeGrant {
+    scope: string,
+    grantedDate?: string // DateTime
+}
+
+export interface WickedGrantCollection {
+    items: WickedGrant[]
+}
+
+export interface WickedGrant {
+    userId?: string,
+    apiId?: string,
+    applicationId?: string,
+    grants: WickedScopeGrant[]
+}
+
+export interface WickedAuthMethod {
+    enabled: string,
+    name: string,
+    type: string,
+    friendlyShort: string,
+    friendlyLong: string,
+    config: any
+}
+
+export interface WickedAuthServer {
+    id: string,
+    name: string,
+    authMethods: WickedAuthMethod[],
+    config: {
+        api: KongApi,
+        plugins: KongPlugin[]
+    }
+}
+
+export enum WickedOwnerRole {
+    Owner = "owner",
+    Collaborator = "collaborator",
+    Reader = "reader"
+}
+
+export interface WickedOwner {
+    userId: string,
+    email: string,
+    role: WickedOwnerRole
+}
+
+export interface WickedApplication {
+    id: string,
+    name: string,
+    redirectUri: string,
+    confidential: boolean,
+    ownerList: WickedOwner[]
+}
+
+export enum WickedAuthType {
+    KeyAuth = "key-auth",
+    OAuth2 = "oauth2"
+}
+
+export interface WickedSubscription {
+    application: string,
+    api: string,
+    plan: string,
+    auth: WickedAuthType,
+    apikey?: string,
+    clientId?: string,
+    clientSecret?: string,
+    approved: boolean,
+    trusted?: boolean
+}
+
+export interface WickedSubscriptionInfo {
+    application: WickedApplication,
+    subscription: WickedSubscription
+}
+
+export enum WickedPoolPropertyType {
+    String = "string"
+}
+
+export interface WickedPoolProperty {
+    id: string,
+    description: string,
+    type: string,
+    maxLength: number,
+    minLength: number,
+    required: boolean,
+    oidcClaim: string
+}
+
+export interface WickedPool {
+    id: string,
+    name: string,
+    requiresNamespace: boolean,
+    // Disallow interactive registration
+    disallowRegister: boolean,
+    properties: WickedPoolProperty[]
+}
+
+export interface WickedRegistration {
+    userId: string,
+    poolId: string,
+    namespace?: string
+}
+
+export interface WickedRegistrationCollection {
+    items: WickedRegistration[],
+    count: number,
+    count_cached: boolean
+}
+
+export interface WickedNamespace {
+    namespace: string,
+    poolId: string,
+    description: string
+}
+
+// ====================
+// KONG TYPES
+// ====================
+
+export interface KongApi {
+    retries: number,
+    upstream_send_timeout: number,
+    upstream_connect_timeout: number,
+    id: string,
+    upstream_read_timeout: number,
+    strip_uri: boolean,
+    created_at: number,
+    upstream_url: string,
+    name: string,
+    uris: string[],
+    preserve_host: boolean,
+    http_if_terminated: boolean,
+    https_only: boolean
+}
+
+export interface KongPlugin {
+    name: string,
+    config: any
+}
+
+// ====================
+// CALLBACK TYPES
+// ====================
+
+export interface ErrorCallback {
+    (err?): void
+}
+
+export interface WickedGlobalsCallback {
+    (err?, globals?: WickedGlobals): void
+}
+
+export interface WickedUserInfoCallback {
+    (err?, userInfo?: WickedUserInfo): void
+}
+
+export interface WickedObjectCallback {
+    (err?, o?: any): void
+}
+
+export interface WickedApiCallback {
+    (err, wickedApi?: WickedApi): void
+}
+
+export interface WickedPoolCallback {
+    (err, poolInfo?: WickedPool): void
+}
+
+export interface KongApiCallback {
+    (err, kongApi?: KongApi): void
+}
+
+// ====================
+// FUNCTION TYPES
+// ====================
+
+export interface ExpressHandler {
+    (req, res, next?): void
+}
+
 // ======= INITIALIZATION =======
 
-exports.initialize = function (options, callback) {
-    initialize(options, callback);
+export function initialize(options: WickedInitOptions, callback: WickedGlobalsCallback): void {
+    _initialize(options, callback);
+}
+
+export function isDevelopmentMode(): boolean {
+    return _isDevelopmentMode();
 };
 
-exports.isDevelopmentMode = function () {
-    return isDevelopmentMode();
+export function initMachineUser(serviceId: string, callback: ErrorCallback): void {
+    _initMachineUser(serviceId, callback);
 };
 
-exports.initMachineUser = function (serviceId, callback) {
-    initMachineUser(serviceId, callback);
+export function awaitUrl(url: string, options: WickedAwaitOptions, callback: WickedObjectCallback): void {
+    _awaitUrl(url, options, callback);
 };
 
-exports.awaitUrl = function (url, options, callback) {
-    awaitUrl(url, options, callback);
+export function awaitKongAdapter(awaitOptions: WickedAwaitOptions, callback: WickedObjectCallback): void {
+    _awaitKongAdapter(awaitOptions, callback);
 };
 
-exports.awaitKongAdapter = function (awaitOptions, callback) {
-    awaitKongAdapter(awaitOptions, callback);
-};
-
-exports.awaitKongOAuth2 = function (awaitOptions, callback) {
-    awaitKongOAuth2(awaitOptions, callback);
-};
+// exports.awaitKongOAuth2 = function (awaitOptions, callback) {
+//     awaitKongOAuth2(awaitOptions, callback);
+// };
 
 // ======= INFORMATION RETRIEVAL =======
 
-exports.getGlobals = function () {
-    return getGlobals();
+export function getGlobals(): WickedGlobals {
+    return _getGlobals();
 };
 
-exports.getConfigHash = function () {
-    return getConfigHash();
+export function getConfigHash(): string {
+    return _getConfigHash();
 };
 
-exports.getSchema = function() {
-    return getSchema();
+export function getSchema(): string {
+    return _getSchema();
 };
 
-exports.getExternalPortalHost = function () {
-    return getExternalPortalHost();
+export function getExternalPortalHost(): string {
+    return _getExternalPortalHost();
 };
 
-exports.getExternalPortalUrl = function () {
-    return getExternalPortalUrl();
+export function getExternalPortalUrl(): string {
+    return _getExternalPortalUrl();
 };
 
-exports.getExternalApiHost = function () {
-    return getExternalGatewayHost();
+export function getExternalApiHost(): string {
+    return _getExternalGatewayHost();
 };
 
-exports.getExternalApiUrl = function () {
-    return getExternalGatewayUrl();
+export function getExternalApiUrl(): string {
+    return _getExternalGatewayUrl();
 };
 
-exports.getInternalApiUrl = function () {
-    return getInternalApiUrl();
+export function getInternalApiUrl(): string {
+    return _getInternalApiUrl();
 };
 
-exports.getPortalApiScope = function () {
-    return getPortalApiScope();
+export function getPortalApiScope(): string {
+    return _getPortalApiScope();
 };
 
-exports.getInternalKongAdminUrl = function () {
-    return getInternalKongAdminUrl();
+export function getInternalKongAdminUrl(): string {
+    return _getInternalKongAdminUrl();
 };
 
-exports.getInternalKongAdapterUrl = function () {
-    return getInternalKongAdapterUrl();
+export function getInternalKongAdapterUrl(): string {
+    return _getInternalKongAdapterUrl();
 };
 
-exports.getInternalKongOAuth2Url = function () {
-    return getInternalKongOAuth2Url();
+export function getInternalKongOAuth2Url(): string {
+    return _getInternalKongOAuth2Url();
 };
 
-exports.getInternalChatbotUrl = function () {
-    return getInternalChatbotUrl();
+export function getInternalChatbotUrl(): string {
+    return _getInternalChatbotUrl();
 };
 
-exports.getInternalMailerUrl = function () {
-    return getInternalMailerUrl();
+export function getInternalMailerUrl(): string {
+    return _getInternalMailerUrl();
 };
 
-exports.getInternalUrl = function (globalSettingsProperty) {
-    return getInternalUrl(globalSettingsProperty, null);
+export function getInternalUrl(globalSettingsProperty: string): string {
+    return _getInternalUrl(globalSettingsProperty, null, 0);
 };
 
 // ======= API FUNCTIONALITY =======
 
-exports.apiGet = function (urlPath, userIdOrCallback, callback) {
+export function apiGet(urlPath: string, userIdOrCallback, callback): void {
     let userId = userIdOrCallback;
-    if (!callback && typeof(userIdOrCallback) === 'function') {
+    if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    apiGet(urlPath, userId, null, callback);
+    _apiGet(urlPath, userId, null, callback);
 };
 
-exports.apiPost = function (urlPath, postBody, userIdOrCallback, callback) {
+export function apiPost(urlPath: string, postBody: object, userIdOrCallback, callback): void {
     let userId = userIdOrCallback;
-    if (!callback && typeof(userIdOrCallback) === 'function') {
+    if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    apiPost(urlPath, postBody, userId, callback);
+    _apiPost(urlPath, postBody, userId, callback);
 };
 
-exports.apiPut = function (urlPath, putBody, userIdOrCallback, callback) {
+export function apiPut(urlPath: string, putBody: object, userIdOrCallback, callback): void {
     let userId = userIdOrCallback;
-    if (!callback && typeof(userIdOrCallback) === 'function') {
+    if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    apiPut(urlPath, putBody, userId, callback);
+    _apiPut(urlPath, putBody, userId, callback);
 };
 
-exports.apiPatch = function (urlPath, patchBody, userIdOrCallback, callback) {
+export function apiPatch(urlPath: string, patchBody: object, userIdOrCallback, callback): void {
     let userId = userIdOrCallback;
-    if (!callback && typeof(userIdOrCallback) === 'function') {
+    if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    apiPatch(urlPath, patchBody, userId, callback);
+    _apiPatch(urlPath, patchBody, userId, callback);
 };
 
-exports.apiDelete = function (urlPath, userIdOrCallback, callback) {
+export function apiDelete(urlPath: string, userIdOrCallback, callback): void {
     let userId = userIdOrCallback;
-    if (!callback && typeof(userIdOrCallback) === 'function') {
+    if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    apiDelete(urlPath, userId, callback);
+    _apiDelete(urlPath, userId, callback);
 };
 
 // ======= OAUTH2 CONVENIENCE FUNCTIONS ======= 
 
-exports.getRedirectUriWithAccessToken = function (userInfo, callback) {
-    getRedirectUriWithAccessToken(userInfo, callback);
+export function getRedirectUriWithAccessToken(userInfo, callback) {
+    _getRedirectUriWithAccessToken(userInfo, callback);
 };
 
-exports.oauth2AuthorizeImplicit = function (userInfo, callback) {
-    oauth2AuthorizeImplicit(userInfo, callback);
+export function oauth2AuthorizeImplicit(userInfo, callback) {
+    _oauth2AuthorizeImplicit(userInfo, callback);
 };
 
-exports.oauth2GetAuthorizationCode = function (userInfo, callback) {
-    oauth2GetAuthorizationCode(userInfo, callback);
+export function oauth2GetAuthorizationCode(userInfo, callback) {
+    _oauth2GetAuthorizationCode(userInfo, callback);
 };
 
-exports.oauth2GetAccessTokenPasswordGrant = function (userInfo, callback) {
-    oauth2GetAccessTokenPasswordGrant(userInfo, callback);
+export function oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
+    _oauth2GetAccessTokenPasswordGrant(userInfo, callback);
 };
 
-exports.oauth2RefreshAccessToken = function (tokenInfo, callback) {
-    oauth2RefreshAccessToken(tokenInfo, callback);
+export function oauth2RefreshAccessToken(tokenInfo, callback) {
+    _oauth2RefreshAccessToken(tokenInfo, callback);
 };
 
-exports.oauth2GetAccessTokenInfo = function (accessToken, callback) {
-    oauth2GetAccessTokenInfo(accessToken, callback);
+export function oauth2GetAccessTokenInfo(accessToken, callback) {
+    _oauth2GetAccessTokenInfo(accessToken, callback);
 };
 
-exports.oauth2GetRefreshTokenInfo = function (refreshToken, callback) {
-    oauth2GetRefreshTokenInfo(refreshToken, callback);
+export function oauth2GetRefreshTokenInfo(refreshToken, callback) {
+    _oauth2GetRefreshTokenInfo(refreshToken, callback);
 };
 
-exports.getSubscriptionByClientId = function (clientId, apiId, callback) {
-    getSubscriptionByClientId(clientId, apiId, callback);
+export function getSubscriptionByClientId(clientId, apiId, callback) {
+    _getSubscriptionByClientId(clientId, apiId, callback);
 };
 
-exports.revokeAccessToken = function (accessToken, callback) {
-    revokeAccessToken(accessToken, callback);
+export function revokeAccessToken(accessToken, callback) {
+    _revokeAccessToken(accessToken, callback);
 };
 
-exports.revokeAccessTokensByUserId = function (authenticatedUserId, callback) {
-    revokeAccessTokensByUserId(authenticatedUserId, callback);
+export function revokeAccessTokensByUserId(authenticatedUserId, callback) {
+    _revokeAccessTokensByUserId(authenticatedUserId, callback);
 };
 
 // v1.0.0+ Methods, cannot be used with wicked <1.0.0, pre-release.
-const oauth2 = {
+export const oauth2 = {
     authorize: function (authRequest, callback) {
-        v1_oauth2Authorize(authRequest, callback);
+        _v1_oauth2Authorize(authRequest, callback);
     },
     token: function (tokenRequest, callback) {
-        v1_oauth2Token(tokenRequest, callback);
+        _v1_oauth2Token(tokenRequest, callback);
     },
     getAccessTokenInfo: function (accessToken, callback) {
-        v1_oauth2GetAccessTokenInfo(accessToken, callback);
+        _v1_oauth2GetAccessTokenInfo(accessToken, callback);
     },
     getRefreshTokenInfo: function (refreshToken, callback) {
-        v1_oauth2GetRefreshTokenInfo(refreshToken, callback);
+        _v1_oauth2GetRefreshTokenInfo(refreshToken, callback);
     },
     revokeAccessToken: function (accessToken, callback) {
-        v1_revokeAccessToken(accessToken, callback);
+        _v1_revokeAccessToken(accessToken, callback);
     },
     revokeAccessTokensByUserId: function (authenticatedUserId, callback) {
-        v1_revokeAccessTokensByUserId(authenticatedUserId, callback);
+        _v1_revokeAccessTokensByUserId(authenticatedUserId, callback);
     }
 };
 
-module.exports.oauth2 = oauth2;
+// module.exports.oauth2 = oauth2;
 
 // ======= CORRELATION ID HANDLER =======
 
-exports.correlationIdHandler = function () {
+export function correlationIdHandler(): ExpressHandler {
     return function (req, res, next) {
         const correlationId = req.get('correlation-id');
         if (correlationId) {
@@ -252,11 +683,11 @@ exports.correlationIdHandler = function () {
         wickedStorage.correlationId = correlationId;
         return next();
     };
-};
+}
 
 // ======= IMPLEMENTATION ======
 
-function initialize(options, callback) {
+function _initialize(options: WickedInitOptions, callback: WickedGlobalsCallback): void {
     debug('initialize()');
     if (!callback && (typeof (options) === 'function')) {
         callback = options;
@@ -276,7 +707,7 @@ function initialize(options, callback) {
     // but I did not want to pull in additional dependencies.
     const apiUrl = resolveApiUrl();
     debug('Awaiting portal API at ' + apiUrl);
-    awaitUrl(apiUrl + 'ping', options, function (err, pingResult) {
+    _awaitUrl(apiUrl + 'ping', options, function (err, pingResult) {
         if (err) {
             debug('awaitUrl returned an error:');
             debug(err);
@@ -402,7 +833,7 @@ function forceExit() {
     process.exit(0);
 }
 
-function isDevelopmentMode() {
+function _isDevelopmentMode() {
     checkInitialized('isDevelopmentMode');
 
     if (wickedStorage.globals &&
@@ -419,14 +850,14 @@ const DEFAULT_AWAIT_OPTIONS = {
     retryDelay: 1000
 };
 
-function awaitUrl(url, options, callback) {
+function _awaitUrl(url: string, options: WickedAwaitOptions, callback: WickedObjectCallback) {
     debug('awaitUrl(): ' + url);
     if (!callback && (typeof (options) === 'function')) {
         callback = options;
         options = null;
     }
     // Copy the settings from the defaults; otherwise we'd change them haphazardly
-    const awaitOptions = {
+    const awaitOptions: WickedAwaitOptions = {
         statusCode: DEFAULT_AWAIT_OPTIONS.statusCode,
         maxTries: DEFAULT_AWAIT_OPTIONS.maxTries,
         retryDelay: DEFAULT_AWAIT_OPTIONS.retryDelay
@@ -452,7 +883,7 @@ function awaitUrl(url, options, callback) {
     });
 }
 
-function awaitKongAdapter(awaitOptions, callback) {
+function _awaitKongAdapter(awaitOptions, callback) {
     debug('awaitKongAdapter()');
     checkInitialized('awaitKongAdapter');
     if (!callback && (typeof (awaitOptions) === 'function')) {
@@ -464,8 +895,8 @@ function awaitKongAdapter(awaitOptions, callback) {
         debug(awaitOptions);
     }
 
-    const adapterPingUrl = getInternalKongAdapterUrl() + 'ping';
-    awaitUrl(adapterPingUrl, awaitOptions, function (err, body) {
+    const adapterPingUrl = _getInternalKongAdapterUrl() + 'ping';
+    _awaitUrl(adapterPingUrl, awaitOptions, function (err, body) {
         if (err)
             return callback(err);
         wickedStorage.kongAdapterInitialized = true;
@@ -485,8 +916,8 @@ function awaitKongOAuth2(awaitOptions, callback) {
         debug(awaitOptions);
     }
 
-    const oauth2PingUrl = getInternalKongOAuth2Url() + 'ping';
-    awaitUrl(oauth2PingUrl, awaitOptions, function (err, body) {
+    const oauth2PingUrl = _getInternalKongOAuth2Url() + 'ping';
+    _awaitUrl(oauth2PingUrl, awaitOptions, function (err, body) {
         if (err)
             return callback(err);
         wickedStorage.kongOAuth2Initialized = true;
@@ -494,10 +925,10 @@ function awaitKongOAuth2(awaitOptions, callback) {
     });
 }
 
-function initMachineUser(serviceId, callback) {
+function _initMachineUser(serviceId: string, callback: ErrorCallback) {
     debug('initMachineUser()');
     checkInitialized('initMachineUser');
-    retrieveOrCreateMachineUser(serviceId, (err, userInfo) => {
+    retrieveOrCreateMachineUser(serviceId, (err, _) => {
         if (err)
             return callback(err);
         // wickedStorage.machineUserId has been filled now;
@@ -506,13 +937,13 @@ function initMachineUser(serviceId, callback) {
     });
 }
 
-function retrieveOrCreateMachineUser(serviceId, callback) {
+function retrieveOrCreateMachineUser(serviceId: string, callback: WickedUserInfoCallback) {
     debug('retrieveOrCreateMachineUser()');
     if (!/^[a-zA-Z\-_0-9]+$/.test(serviceId))
         return callback(new Error('Invalid Service ID, must only contain a-z, A-Z, 0-9, - and _.'));
 
     const customId = makeMachineUserCustomId(serviceId);
-    apiGet('users?customId=' + qs.escape(customId), null, 'read_users', function (err, userInfo) {
+    _apiGet('users?customId=' + qs.escape(customId), null, 'read_users', function (err, userInfo) {
         if (err && err.statusCode == 404) {
             // Not found
             return createMachineUser(serviceId, callback);
@@ -551,7 +982,7 @@ function createMachineUser(serviceId, callback) {
         validated: true,
         groups: ['admin']
     };
-    apiPost('users/machine', userInfo, null, function (err, userInfo) {
+    _apiPost('users/machine', userInfo, null, function (err, userInfo) {
         if (err)
             return callback(err);
         storeMachineUser(userInfo);
@@ -563,7 +994,7 @@ function initPortalApiScopes(callback) {
     debug('initPortalApiScopes()');
     if (!wickedStorage.machineUserId)
         return callback(new Error('initPortalApiScopes: Machine user id not initialized.'));
-    apiGet('apis/portal-api', null, 'read_apis', (err, apiInfo) => {
+    _apiGet('apis/portal-api', null, 'read_apis', (err, apiInfo) => {
         if (err)
             return callback(err);
         debug(apiInfo);
@@ -581,56 +1012,56 @@ function initPortalApiScopes(callback) {
     });
 }
 
-function getGlobals() {
+function _getGlobals() {
     debug('getGlobals()');
     checkInitialized('getGlobals');
 
     return wickedStorage.globals;
 }
 
-function getConfigHash() {
+function _getConfigHash() {
     debug('getConfigHash()');
     checkInitialized('getConfigHash');
 
     return wickedStorage.configHash;
 }
 
-function getExternalPortalHost() {
+function _getExternalPortalHost() {
     debug('getExternalPortalHost()');
     checkInitialized('getExternalPortalHost');
 
     return checkNoSlash(getPortalHost());
 }
 
-function getExternalPortalUrl() {
+function _getExternalPortalUrl() {
     debug('getExternalPortalUrl()');
     checkInitialized('getExternalPortalUrl');
 
-    return checkSlash(getSchema() + '://' + getPortalHost());
+    return checkSlash(_getSchema() + '://' + getPortalHost());
 }
 
-function getExternalGatewayHost() {
+function _getExternalGatewayHost() {
     debug('getExternalGatewayHost()');
     checkInitialized('getExternalGatewayHost()');
 
     return checkNoSlash(getApiHost());
 }
 
-function getExternalGatewayUrl() {
+function _getExternalGatewayUrl() {
     debug('getExternalGatewayUrl()');
     checkInitialized('getExternalGatewayUrl');
 
-    return checkSlash(getSchema() + '://' + getApiHost());
+    return checkSlash(_getSchema() + '://' + getApiHost());
 }
 
-function getInternalApiUrl() {
+function _getInternalApiUrl() {
     debug('getInternalApiUrl()');
     checkInitialized('getInternalApiUrl');
 
     return checkSlash(wickedStorage.apiUrl);
 }
 
-function getPortalApiScope() {
+function _getPortalApiScope() {
     debug('getPortalApiScope()');
     checkInitialized('getPortalApiScope');
 
@@ -640,42 +1071,42 @@ function getPortalApiScope() {
     return '';
 }
 
-function getInternalKongAdminUrl() {
+function _getInternalKongAdminUrl() {
     debug('getInternalKongAdminUrl()');
     checkInitialized('getInternalKongAdminUrl');
 
-    return getInternalUrl('kongAdminUrl', 'kong', 8001);
+    return _getInternalUrl('kongAdminUrl', 'kong', 8001);
 }
 
-function getInternalMailerUrl() {
+function _getInternalMailerUrl() {
     debug('getInternalMailerUrl');
     checkInitialized('getInternalMailerUrl');
 
-    return getInternalUrl('mailerUrl', 'portal-mailer', 3003);
+    return _getInternalUrl('mailerUrl', 'portal-mailer', 3003);
 }
 
-function getInternalChatbotUrl() {
+function _getInternalChatbotUrl() {
     debug('getInternalChatbotUrl()');
     checkInitialized('getInternalChatbotUrl');
 
-    return getInternalUrl('chatbotUrl', 'portal-chatbot', 3004);
+    return _getInternalUrl('chatbotUrl', 'portal-chatbot', 3004);
 }
 
-function getInternalKongAdapterUrl() {
+function _getInternalKongAdapterUrl() {
     debug('getInternalKongAdapterUrl()');
     checkInitialized('getInternalKongAdapterUrl');
 
-    return getInternalUrl('kongAdapterUrl', 'portal-kong-adapter', 3002);
+    return _getInternalUrl('kongAdapterUrl', 'portal-kong-adapter', 3002);
 }
 
-function getInternalKongOAuth2Url() {
+function _getInternalKongOAuth2Url() {
     debug('getInternalKongOAuth2Url()');
     checkInitialized('getInternalKongOAuth2Url');
 
-    return getInternalUrl('kongOAuth2Url', 'portal-kong-oauth2', 3006);
+    return _getInternalUrl('kongOAuth2Url', 'portal-kong-oauth2', 3006);
 }
 
-function getInternalUrl(globalSettingsProperty, defaultHost, defaultPort) {
+function _getInternalUrl(globalSettingsProperty: string, defaultHost: string, defaultPort: number) {
     debug('getInternalUrl("' + globalSettingsProperty + '")');
     checkInitialized('getInternalUrl');
 
@@ -702,7 +1133,7 @@ function checkNoSlash(someUrl) {
     return someUrl;
 }
 
-function getSchema() {
+function _getSchema() {
     checkInitialized('getSchema');
     if (wickedStorage.globals.network &&
         wickedStorage.globals.network.schema)
@@ -802,7 +1233,7 @@ function tryGet(url, statusCode, maxTries, tryCounter, timeout, callback) {
 }
 
 function getJson(ob) {
-    if (ob instanceof String || typeof ob === "string")
+    if (typeof ob === "string")
         return JSON.parse(ob);
     return ob;
 }
@@ -813,7 +1244,7 @@ function getText(ob) {
     return JSON.stringify(ob, null, 2);
 }
 
-function apiGet(urlPath, userId, scope, callback) {
+function _apiGet(urlPath, userId, scope, callback) {
     debug('apiGet(): ' + urlPath);
     checkInitialized('apiGet');
     if (arguments.length !== 4)
@@ -822,7 +1253,7 @@ function apiGet(urlPath, userId, scope, callback) {
     apiAction('GET', urlPath, null, userId, scope, callback);
 }
 
-function apiPost(urlPath, postBody, userId, callback) {
+function _apiPost(urlPath, postBody, userId, callback) {
     debug('apiPost(): ' + urlPath);
     checkInitialized('apiPost');
     if (arguments.length !== 4)
@@ -831,7 +1262,7 @@ function apiPost(urlPath, postBody, userId, callback) {
     apiAction('POST', urlPath, postBody, userId, null, callback);
 }
 
-function apiPut(urlPath, putBody, userId, callback) {
+function _apiPut(urlPath, putBody, userId, callback) {
     debug('apiPut(): ' + urlPath);
     checkInitialized('apiPut');
     if (arguments.length !== 4)
@@ -840,7 +1271,7 @@ function apiPut(urlPath, putBody, userId, callback) {
     apiAction('PUT', urlPath, putBody, userId, null, callback);
 }
 
-function apiPatch(urlPath, patchBody, userId, callback) {
+function _apiPatch(urlPath, patchBody, userId, callback) {
     debug('apiPatch(): ' + urlPath);
     checkInitialized('apiPatch');
     if (arguments.length !== 4)
@@ -849,7 +1280,7 @@ function apiPatch(urlPath, patchBody, userId, callback) {
     apiAction('PATCH', urlPath, patchBody, userId, null, callback);
 }
 
-function apiDelete(urlPath, userId, callback) {
+function _apiDelete(urlPath, userId, callback) {
     debug('apiDelete(): ' + urlPath);
     checkInitialized('apiDelete');
     if (arguments.length !== 3)
@@ -862,7 +1293,7 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
     debug('apiAction(' + method + '): ' + urlPath);
     if (arguments.length !== 6)
         throw new Error('apiAction called with wrong number of arguments');
-    if (typeof(callback) !== 'function')
+    if (typeof (callback) !== 'function')
         throw new Error('apiAction: callback is not a function');
 
     if (!wickedStorage.apiReachable)
@@ -889,9 +1320,9 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
     if (urlPath.startsWith('/'))
         urlPath = urlPath.substring(1); // strip slash in beginning; it's in the API url
 
-    const url = getInternalApiUrl() + urlPath;
+    const url = _getInternalApiUrl() + urlPath;
     debug(method + ' ' + url);
-    const reqInfo = {
+    const reqInfo: any = {
         method: method,
         url: url,
         timeout: WICKED_TIMEOUT
@@ -929,9 +1360,7 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
             return callback(err);
         if (res.statusCode > 299) {
             // Looks bad
-            const err = new Error('api' + nice(method) + '() ' + urlPath + ' returned non-OK status code: ' + res.statusCode + ', check err.statusCode and err.body for details');
-            err.statusCode = res.statusCode;
-            err.body = body;
+            const err = new WickedError('api' + nice(method) + '() ' + urlPath + ' returned non-OK status code: ' + res.statusCode + ', check err.statusCode and err.body for details', res.statusCode, body);
             return callback(err);
         }
         if (res.statusCode !== 204) {
@@ -960,8 +1389,8 @@ function nice(methodName) {
 // ====== OAUTH2 ======
 
 function kongAdapterAction(method, url, body, callback) {
-    const actionUrl = getInternalKongAdapterUrl() + url;
-    const reqBody = {
+    const actionUrl = _getInternalKongAdapterUrl() + url;
+    const reqBody: RequestBody = {
         method: method,
         url: actionUrl,
         timeout: KONG_TIMEOUT
@@ -977,12 +1406,10 @@ function kongAdapterAction(method, url, body, callback) {
             return callback(err);
         }
         if (res.statusCode > 299) {
-            const err = new Error(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
             debug('Unexpected status code.');
             debug('Status Code: ' + res.statusCode);
             debug('Body: ' + body);
-            err.statusCode = res.statusCode;
-            err.body = body;
+            const err = new WickedError(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.', res.statusCode, body);
             return callback(err);
         }
         let jsonBody = null;
@@ -990,20 +1417,19 @@ function kongAdapterAction(method, url, body, callback) {
             jsonBody = getJson(body);
             debug(jsonBody);
         } catch (ex) {
-            const err = new Error(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.');
-            err.body = body;
+            const err = new WickedError(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.', 500, body);
             return callback(err);
         }
         return callback(null, jsonBody);
     });
 }
 
-function getRedirectUriWithAccessToken(userInfo, callback) {
+function _getRedirectUriWithAccessToken(userInfo, callback) {
     debug('getRedirectUriWithAccessToken()');
-    oauth2AuthorizeImplicit(userInfo, callback);
+    _oauth2AuthorizeImplicit(userInfo, callback);
 }
 
-function oauth2AuthorizeImplicit(userInfo, callback) {
+function _oauth2AuthorizeImplicit(userInfo, callback) {
     debug('oauth2AuthorizeImplicit()');
     checkInitialized('oauth2AuthorizeImplicit');
     checkKongAdapterInitialized('oauth2AuthorizeImplicit');
@@ -1024,7 +1450,7 @@ function oauth2AuthorizeImplicit(userInfo, callback) {
     });
 }
 
-function oauth2GetAuthorizationCode(userInfo, callback) {
+function _oauth2GetAuthorizationCode(userInfo, callback) {
     debug('oauth2GetAuthorizationCode()');
     checkInitialized('oauth2GetAuthorizationCode');
     checkKongAdapterInitialized('oauth2GetAuthorizationCode');
@@ -1045,7 +1471,7 @@ function oauth2GetAuthorizationCode(userInfo, callback) {
     });
 }
 
-function oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
+function _oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
     debug('oauth2GetAccessTokenPasswordGrant()');
     checkInitialized('oauth2GetAccessTokenPasswordGrant');
     checkKongAdapterInitialized('oauth2GetAccessTokenPasswordGrant');
@@ -1066,7 +1492,7 @@ function oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
     });
 }
 
-function oauth2RefreshAccessToken(tokenInfo, callback) {
+function _oauth2RefreshAccessToken(tokenInfo, callback) {
     debug('oauth2RefreshAccessToken');
     checkInitialized('oauth2RefreshAccessToken');
     checkKongAdapterInitialized('oauth2RefreshAccessToken');
@@ -1085,7 +1511,7 @@ function oauth2RefreshAccessToken(tokenInfo, callback) {
     });
 }
 
-function oauth2GetAccessTokenInfo(accessToken, callback) {
+function _oauth2GetAccessTokenInfo(accessToken, callback) {
     debug('oauth2GetAccessTokenInfo()');
     checkInitialized('oauth2GetAccessTokenInfo');
     checkKongAdapterInitialized('oauth2GetAccessTokenInfo');
@@ -1097,7 +1523,7 @@ function oauth2GetAccessTokenInfo(accessToken, callback) {
     });
 }
 
-function oauth2GetRefreshTokenInfo(refreshToken, callback) {
+function _oauth2GetRefreshTokenInfo(refreshToken, callback) {
     debug('oauth2GetRefreshTokenInfo()');
     checkInitialized('oauth2GetRefreshTokenInfo');
     checkKongAdapterInitialized('oauth2GetRefreshTokenInfo');
@@ -1109,7 +1535,7 @@ function oauth2GetRefreshTokenInfo(refreshToken, callback) {
     });
 }
 
-function revokeAccessToken(accessToken, callback) {
+function _revokeAccessToken(accessToken, callback) {
     debug(`revokeAccessToken(${accessToken})`);
     checkInitialized('revokeAccessToken()');
     checkKongAdapterInitialized('revokeAccessToken()');
@@ -1117,7 +1543,7 @@ function revokeAccessToken(accessToken, callback) {
     kongAdapterAction('DELETE', 'oauth2/token?access_token=' + qs.escape(accessToken), null, callback);
 }
 
-function revokeAccessTokensByUserId(authenticatedUserId, callback) {
+function _revokeAccessTokensByUserId(authenticatedUserId, callback) {
     debug(`revokeAccessTokenByUserId(${authenticatedUserId})`);
     checkInitialized('revokeAccessTokenByUserId()');
     checkKongAdapterInitialized('revokeAccessTokenByUserId()');
@@ -1125,7 +1551,7 @@ function revokeAccessTokensByUserId(authenticatedUserId, callback) {
     kongAdapterAction('DELETE', 'oauth2/token?authenticated_userid=' + qs.escape(authenticatedUserId), null, callback);
 }
 
-function getSubscriptionByClientId(clientId, apiId, callback) {
+function _getSubscriptionByClientId(clientId, apiId, callback) {
     debug('getSubscriptionByClientId()');
     checkInitialized('getSubscriptionByClientId');
 
@@ -1135,7 +1561,7 @@ function getSubscriptionByClientId(clientId, apiId, callback) {
     }
 
     // Check whether we know this client ID, otherwise we won't bother.
-    apiGet('subscriptions/' + qs.escape(clientId), null, null, function (err, subsInfo) {
+    _apiGet('subscriptions/' + qs.escape(clientId), null, null, function (err, subsInfo) {
         if (err) {
             debug('GET of susbcription for client_id ' + clientId + ' failed.');
             debug(err);
@@ -1156,8 +1582,8 @@ function getSubscriptionByClientId(clientId, apiId, callback) {
 }
 
 function kongOAuth2Action(method, url, body, errorOnUnexpectedStatusCode, callback) {
-    const actionUrl = getInternalKongOAuth2Url() + url;
-    const reqBody = {
+    const actionUrl = _getInternalKongOAuth2Url() + url;
+    const reqBody: RequestBody = {
         method: method,
         url: actionUrl,
         timeout: KONG_TIMEOUT
@@ -1174,12 +1600,10 @@ function kongOAuth2Action(method, url, body, errorOnUnexpectedStatusCode, callba
         }
         if (errorOnUnexpectedStatusCode) {
             if (res.statusCode > 299) {
-                const err = new Error(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.');
                 debug('Unexpected status code.');
                 debug('Status Code: ' + res.statusCode);
                 debug('Body: ' + body);
-                err.statusCode = res.statusCode;
-                err.body = body;
+                const err = new WickedError(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.', res.statusCode, body);
                 return callback(err);
             }
         }
@@ -1188,15 +1612,14 @@ function kongOAuth2Action(method, url, body, errorOnUnexpectedStatusCode, callba
             jsonBody = getJson(body);
             debug(jsonBody);
         } catch (ex) {
-            const err = new Error(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.');
-            err.body = body;
+            const err = new WickedError(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.', 500, body);
             return callback(err);
         }
         return callback(null, jsonBody);
     });
 }
 
-function v1_oauth2Authorize(authRequest, callback) {
+function _v1_oauth2Authorize(authRequest, callback) {
     debug('v1_oauth2Authorize()');
     checkInitialized('v1_oauth2Authorize()');
     checkKongOAuth2Initialized('v1_oauth2Authorize()');
@@ -1204,7 +1627,7 @@ function v1_oauth2Authorize(authRequest, callback) {
     kongOAuth2Action('POST', 'oauth2/authorize', authRequest, false, callback);
 }
 
-function v1_oauth2Token(tokenRequest, callback) {
+function _v1_oauth2Token(tokenRequest, callback) {
     debug('v1_oauth2Token()');
     checkInitialized('v1_oauth2Token()');
     checkKongOAuth2Initialized('v1_oauth2Token()');
@@ -1212,7 +1635,7 @@ function v1_oauth2Token(tokenRequest, callback) {
     kongOAuth2Action('POST', 'oauth2/token', tokenRequest, false, callback);
 }
 
-function v1_oauth2GetAccessTokenInfo(accessToken, callback) {
+function _v1_oauth2GetAccessTokenInfo(accessToken, callback) {
     debug('v1_oauth2GetAccessTokenInfo()');
     checkInitialized('v1_oauth2GetAccessTokenInfo');
     checkKongOAuth2Initialized('v1_oauth2GetAccessTokenInfo');
@@ -1224,7 +1647,7 @@ function v1_oauth2GetAccessTokenInfo(accessToken, callback) {
     });
 }
 
-function v1_oauth2GetRefreshTokenInfo(refreshToken, callback) {
+function _v1_oauth2GetRefreshTokenInfo(refreshToken, callback) {
     debug('v1_oauth2GetRefreshTokenInfo()');
     checkInitialized('v1_oauth2GetRefreshTokenInfo');
     checkKongOAuth2Initialized('v1_oauth2GetRefreshTokenInfo');
@@ -1236,7 +1659,7 @@ function v1_oauth2GetRefreshTokenInfo(refreshToken, callback) {
     });
 }
 
-function v1_revokeAccessToken(accessToken, callback) {
+function _v1_revokeAccessToken(accessToken, callback) {
     debug(`v1_revokeAccessToken(${accessToken})`);
     checkInitialized('v1_revokeAccessToken()');
     checkKongOAuth2Initialized('v1_revokeAccessToken');
@@ -1244,7 +1667,7 @@ function v1_revokeAccessToken(accessToken, callback) {
     kongOAuth2Action('DELETE', 'oauth2_tokens?access_token=' + qs.escape(accessToken), null, true, callback);
 }
 
-function v1_revokeAccessTokensByUserId(authenticatedUserId, callback) {
+function _v1_revokeAccessTokensByUserId(authenticatedUserId, callback) {
     debug(`v1_revokeAccessTokensByUserId(${authenticatedUserId})`);
     checkInitialized('v1_revokeAccessTokensByUserId()');
     checkKongOAuth2Initialized('v1_revokeAccessTokensByUserId');

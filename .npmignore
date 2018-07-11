@@ -5,3 +5,5 @@ Dockerfile-publish
 .DS_Store
 *.log
 *.tgz
+src
+tsconfig.json

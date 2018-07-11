@@ -31,6 +31,7 @@ echo "INFO: wicked-sdk v${sdkVersion}"
 rm -f install-local-sdk.log
 
 npm install > /dev/null
+tsc
 packageFile=$(npm pack)
 echo "INFO: Package file: ${packageFile}"
 
