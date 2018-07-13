@@ -5,8 +5,12 @@ const debug = require('debug')('wicked-sdk');
 const request = require('request');
 const qs = require('querystring');
 const uuid = require('node-uuid');
+const containerized = require('containerized');
 
 import { WickedError } from "./wicked-error";
+
+const isLinux = (os.platform() === 'linux');
+const isContainerized = isLinux && containerized();
 
 const WICKED_TIMEOUT = 2000; // request timeout for wicked API operations
 const KONG_TIMEOUT = 5000; // request timeout for kong admin API operations
@@ -20,7 +24,6 @@ const TRYGET_TIMEOUT = 2000; // request timeout for single calls in awaitUrl
 const wickedStorage = {
     initialized: false,
     kongAdapterInitialized: false,
-    kongOAuth2Initialized: false,
     machineUserId: null,
     apiUrl: null,
     globals: null,
@@ -45,6 +48,9 @@ const wickedStorage = {
 interface RequestBody {
     method: string,
     url: string,
+    headers?: {
+        [headerName: string]: string
+    }
     timeout?: number,
     json?: boolean,
     body?: any
@@ -148,25 +154,25 @@ export interface WickedLayoutConfig {
     defautRootUrlTarget: string,
     defautRootUrlText: null,
     menu: {
-      homeLinkText: string,
-      apisLinkVisibleToGuest: boolean,
-      applicationsLinkVisibleToGuest: boolean,
-      contactLinkVisibleToGuest: boolean,
-      contentLinkVisibleToGuest: boolean,
-      classForLoginSignupPosition: string,
-      showSignupLink: boolean,
-      loginLinkText: string
+        homeLinkText: string,
+        apisLinkVisibleToGuest: boolean,
+        applicationsLinkVisibleToGuest: boolean,
+        contactLinkVisibleToGuest: boolean,
+        contentLinkVisibleToGuest: boolean,
+        classForLoginSignupPosition: string,
+        showSignupLink: boolean,
+        loginLinkText: string
     },
     footer: {
-      showBuiltBy: boolean,
-      showBuilds: boolean
+        showBuiltBy: boolean,
+        showBuilds: boolean
     },
     swaggerUi: {
-      menu: {
-        homeLinkText: string,
-        showContactLink: boolean,
-        showContentLink: boolean
-      }
+        menu: {
+            homeLinkText: string,
+            showContactLink: boolean,
+            showContentLink: boolean
+        }
     }
 }
 
@@ -237,22 +243,25 @@ export interface WickedGlobalsInitialUser {
     groups: string[]
 }
 
-export interface WickedUserInfo {
+export interface WickedUserShortInfo {
     id: string,
     customId?: string,
-    email?: string,
-    password?: string,
-    validated?: boolean,
-    groups: string[]
+    email: string,
 }
 
 export interface WickedUserCreateInfo {
     customId?: string,
     email: string,
     password?: string,
-    validated: boolean,
+    validated?: boolean,
     groups: string[]
 }
+
+export interface WickedUserInfo extends WickedUserCreateInfo {
+    id: string,
+    applications?: WickedApplication[]
+}
+
 
 export interface WickedApi {
     id: string,
@@ -263,7 +272,13 @@ export interface WickedApi {
     authMethods?: string[],
     registrationPool?: string,
     requiredGroup?: string,
-    settings: WickedApiSettings
+    settings: WickedApiSettings,
+    _links?: any
+}
+
+export interface WickedApiCollection {
+    apis: WickedApi[],
+    _links?: any
 }
 
 export interface WickedApiSettings {
@@ -284,13 +299,24 @@ export interface WickedApiScopes {
     }
 }
 
+export interface WickedApiPlan {
+    id: string,
+    name: string,
+    desc: string,
+    needsApproval?: boolean,
+    requiredGroup?: string,
+    config: {
+        plugins: KongPlugin[]
+    }
+}
+
+export interface WickedApiPlanCollection {
+    plans: WickedApiPlan[]
+}
+
 export interface WickedScopeGrant {
     scope: string,
     grantedDate?: string // DateTime
-}
-
-export interface WickedGrantCollection {
-    items: WickedGrant[]
 }
 
 export interface WickedGrant {
@@ -331,11 +357,14 @@ export interface WickedOwner {
     role: WickedOwnerRole
 }
 
-export interface WickedApplication {
+export interface WickedApplicationCreateInfo {
     id: string,
     name: string,
-    redirectUri: string,
-    confidential: boolean,
+    redirectUri?: string,
+    confidential?: boolean,
+}
+
+export interface WickedApplication extends WickedApplicationCreateInfo {
     ownerList: WickedOwner[]
 }
 
@@ -344,15 +373,36 @@ export enum WickedAuthType {
     OAuth2 = "oauth2"
 }
 
-export interface WickedSubscription {
+export enum WickedApplicationRoleType {
+    Admin = 'admin',
+    Collaborator = 'collaborator',
+    Reader = 'reader'
+}
+
+export interface WickedApplicationRole {
+    role: WickedApplicationRoleType,
+    desc: string
+}
+
+export interface WickedSubscriptionCreateInfo {
     application: string,
     api: string,
     plan: string,
     auth: WickedAuthType,
     apikey?: string,
+}
+
+export interface WickedSubscription extends WickedSubscriptionCreateInfo {
     clientId?: string,
     clientSecret?: string,
     approved: boolean,
+    trusted?: boolean,
+    changedBy?: string,
+    changedDate?: string
+}
+
+export interface WickedSubscriptionPatchInfo {
+    approved?: boolean,
     trusted?: boolean
 }
 
@@ -378,10 +428,14 @@ export interface WickedPoolProperty {
 export interface WickedPool {
     id: string,
     name: string,
-    requiresNamespace: boolean,
+    requiresNamespace?: boolean,
     // Disallow interactive registration
-    disallowRegister: boolean,
+    disallowRegister?: boolean,
     properties: WickedPoolProperty[]
+}
+
+export interface WickedPoolMap {
+    [poolId: string]: WickedPool
 }
 
 export interface WickedRegistration {
@@ -390,16 +444,168 @@ export interface WickedRegistration {
     namespace?: string
 }
 
-export interface WickedRegistrationCollection {
-    items: WickedRegistration[],
-    count: number,
-    count_cached: boolean
+export interface WickedRegistrationMap {
+    pools: {
+        [poolId: string]: WickedRegistration[]
+    }
 }
 
 export interface WickedNamespace {
     namespace: string,
     poolId: string,
     description: string
+}
+
+export interface WickedGroup {
+    id: string,
+    name: string,
+    alt_ids?: string[],
+    adminGroup?: boolean,
+    approverGroup?: boolean
+}
+
+export interface WickedGroupCollection {
+    groups: WickedGroup[]
+}
+
+export interface WickedApproval {
+    id: string,
+    user: {
+        id: string,
+        name: string,
+        email: string
+    },
+    api: {
+        id: string,
+        name: string
+    },
+    application: {
+        id: string,
+        name: string
+    },
+    plan: {
+        id: string,
+        name: string
+    }
+}
+
+export interface WickedVerification {
+    id: string,
+    type: WickedVerificationType,
+    email: string,
+    // Not needed when creating, is returned on retrieval
+    userId?: string,
+    // The fully qualified link to the verification page, with a placeholder for the ID (mustache {{id}})
+    link?: string
+}
+
+export enum WickedVerificationType {
+    Email = 'email',
+    LostPassword = 'lostpassword'
+}
+
+export interface WickedComponentHealth {
+    name: string,
+    message?: string,
+    uptime: number,
+    healthy: WickedComponentHealthType,
+    pingUrl: string,
+    pendingEvents: number
+}
+
+export enum WickedComponentHealthType {
+    NotHealthy = 0,
+    Healthy = 1,
+    Initializing = 2
+}
+
+export interface WickedChatbotTemplates {
+    userLoggedIn: string,
+    userSignedUp: string,
+    userValidatedEmail: string,
+    applicationAdded: string,
+    applicationDeleted: string,
+    subscriptionAdded: string,
+    subscriptionDeleted: string,
+    approvalRequired: string,
+    lostPasswordRequest: string,
+    verifyEmailRequest: string
+}
+
+export enum WickedEmailTemplateType {
+    LostPassword = 'lost_password',
+    PendingApproval = 'pending_approval',
+    VerifyEmail = 'verify_email'
+}
+
+export interface WickedWebhookListener {
+    id: string,
+    url: string
+}
+
+export interface WickedEvent {
+    id: string,
+    action: WickedEventActionType,
+    entity: WickedEventEntityType,
+    href?: string,
+    data?: object
+}
+
+export enum WickedEventActionType {
+    Add = 'add',
+    Update = 'update',
+    Delete = 'delete',
+    Password = 'password',
+    Validated = 'validated',
+    Login = 'login',
+    // These two are deprecated
+    ImportFailed = 'failed',
+    ImportDone = 'done'
+}
+
+export enum WickedEventEntityType {
+    Application = 'application',
+    User = 'user',
+    Subscription = 'subscription',
+    Approval = 'approval',
+    Owner = 'owner',
+    Verification = 'verification',
+    VerificationLostPassword = 'verification_lost_password',
+    VerificationEmail = 'verification_email',
+    // Deprecated
+    Export = 'export',
+    Import = 'import'
+}
+
+// OPTION TYPES
+
+export interface WickedGetOptions {
+    offset?: number,
+    limit?: number
+}
+
+export interface WickedGetCollectionOptions extends WickedGetOptions {
+    filter?: {
+        [field: string]: string
+    },
+    order_by?: string,
+    no_cache?: boolean
+}
+
+export interface WickedGetRegistrationOptions extends WickedGetCollectionOptions {
+    namespace?: string
+}
+
+// ====================
+// GENERICS
+// ====================
+
+export interface WickedCollection<T> {
+    items: T[],
+    count: number,
+    count_cached: boolean,
+    offset: number,
+    limit: number
 }
 
 // ====================
@@ -432,32 +638,13 @@ export interface KongPlugin {
 // ====================
 
 export interface ErrorCallback {
-    (err?): void
+    (err): void
 }
 
-export interface WickedGlobalsCallback {
-    (err?, globals?: WickedGlobals): void
+export interface Callback<T> {
+    (err, t?: T): void
 }
 
-export interface WickedUserInfoCallback {
-    (err?, userInfo?: WickedUserInfo): void
-}
-
-export interface WickedObjectCallback {
-    (err?, o?: any): void
-}
-
-export interface WickedApiCallback {
-    (err, wickedApi?: WickedApi): void
-}
-
-export interface WickedPoolCallback {
-    (err, poolInfo?: WickedPool): void
-}
-
-export interface KongApiCallback {
-    (err, kongApi?: KongApi): void
-}
 
 // ====================
 // FUNCTION TYPES
@@ -469,7 +656,7 @@ export interface ExpressHandler {
 
 // ======= INITIALIZATION =======
 
-export function initialize(options: WickedInitOptions, callback: WickedGlobalsCallback): void {
+export function initialize(options: WickedInitOptions, callback: Callback<WickedGlobals>): void {
     _initialize(options, callback);
 }
 
@@ -481,11 +668,11 @@ export function initMachineUser(serviceId: string, callback: ErrorCallback): voi
     _initMachineUser(serviceId, callback);
 };
 
-export function awaitUrl(url: string, options: WickedAwaitOptions, callback: WickedObjectCallback): void {
+export function awaitUrl(url: string, options: WickedAwaitOptions, callback: Callback<any>): void {
     _awaitUrl(url, options, callback);
 };
 
-export function awaitKongAdapter(awaitOptions: WickedAwaitOptions, callback: WickedObjectCallback): void {
+export function awaitKongAdapter(awaitOptions: WickedAwaitOptions, callback: Callback<any>): void {
     _awaitKongAdapter(awaitOptions, callback);
 };
 
@@ -537,10 +724,6 @@ export function getInternalKongAdminUrl(): string {
 
 export function getInternalKongAdapterUrl(): string {
     return _getInternalKongAdapterUrl();
-};
-
-export function getInternalKongOAuth2Url(): string {
-    return _getInternalKongOAuth2Url();
 };
 
 export function getInternalChatbotUrl(): string {
@@ -602,71 +785,535 @@ export function apiDelete(urlPath: string, userIdOrCallback, callback): void {
     _apiDelete(urlPath, userId, callback);
 };
 
-// ======= OAUTH2 CONVENIENCE FUNCTIONS ======= 
+// ======= API CONVENIENCE FUNCTIONS =======
 
-export function getRedirectUriWithAccessToken(userInfo, callback) {
-    _getRedirectUriWithAccessToken(userInfo, callback);
-};
+// APIS
 
-export function oauth2AuthorizeImplicit(userInfo, callback) {
-    _oauth2AuthorizeImplicit(userInfo, callback);
-};
+export function getApis(callback: Callback<WickedApiCollection>): void {
+    getApisAs(null, callback);
+}
 
-export function oauth2GetAuthorizationCode(userInfo, callback) {
-    _oauth2GetAuthorizationCode(userInfo, callback);
-};
+export function getApisAs(asUserId: string, callback: Callback<WickedApiCollection>): void {
+    apiGet('apis', asUserId, callback);
+}
 
-export function oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
-    _oauth2GetAccessTokenPasswordGrant(userInfo, callback);
-};
+export function getApisDescription(callback: Callback<string>): void {
+    getApisDescriptionAs(null, callback);
+}
 
-export function oauth2RefreshAccessToken(tokenInfo, callback) {
-    _oauth2RefreshAccessToken(tokenInfo, callback);
-};
+export function getApisDescriptionAs(asUserId: string, callback: Callback<string>): void {
+    apiGet(`apis/desc`, asUserId, callback);
+}
 
-export function oauth2GetAccessTokenInfo(accessToken, callback) {
-    _oauth2GetAccessTokenInfo(accessToken, callback);
-};
+export function getApi(apiId: string, callback: Callback<WickedApi>): void {
+    getApiAs(apiId, null, callback);
+}
 
-export function oauth2GetRefreshTokenInfo(refreshToken, callback) {
-    _oauth2GetRefreshTokenInfo(refreshToken, callback);
-};
+export function getApiAs(apiId: string, asUserId: string, callback: Callback<WickedApi>): void {
+    apiGet(`apis/${apiId}`, asUserId, callback);
+}
 
-export function getSubscriptionByClientId(clientId, apiId, callback) {
-    _getSubscriptionByClientId(clientId, apiId, callback);
-};
+export function getApiDescription(apiId: string, callback: Callback<string>): void {
+    getApiDescriptionAs(apiId, null, callback);
+}
 
-export function revokeAccessToken(accessToken, callback) {
-    _revokeAccessToken(accessToken, callback);
-};
+export function getApiDescriptionAs(apiId: string, asUserId: string, callback: Callback<string>): void {
+    apiGet(`apis/${apiId}/desc`, asUserId, callback);
+}
 
-export function revokeAccessTokensByUserId(authenticatedUserId, callback) {
-    _revokeAccessTokensByUserId(authenticatedUserId, callback);
-};
+export function getApiConfig(apiId: string, callback: Callback<any>): void {
+    getApiConfigAs(apiId, null, callback);
+}
 
-// v1.0.0+ Methods, cannot be used with wicked <1.0.0, pre-release.
-export const oauth2 = {
-    authorize: function (authRequest, callback) {
-        _v1_oauth2Authorize(authRequest, callback);
-    },
-    token: function (tokenRequest, callback) {
-        _v1_oauth2Token(tokenRequest, callback);
-    },
-    getAccessTokenInfo: function (accessToken, callback) {
-        _v1_oauth2GetAccessTokenInfo(accessToken, callback);
-    },
-    getRefreshTokenInfo: function (refreshToken, callback) {
-        _v1_oauth2GetRefreshTokenInfo(refreshToken, callback);
-    },
-    revokeAccessToken: function (accessToken, callback) {
-        _v1_revokeAccessToken(accessToken, callback);
-    },
-    revokeAccessTokensByUserId: function (authenticatedUserId, callback) {
-        _v1_revokeAccessTokensByUserId(authenticatedUserId, callback);
-    }
-};
+export function getApiConfigAs(apiId: string, asUserId: string, callback: Callback<any>): void {
+    apiGet(`apis/${apiId}/config`, asUserId, callback);
+}
 
-// module.exports.oauth2 = oauth2;
+export function getApiSwagger(apiId: string, callback: Callback<object>): void {
+    getApiSwaggerAs(apiId, null, callback);
+}
+
+export function getApiSwaggerAs(apiId: string, asUserId: string, callback: Callback<object>): void {
+    apiGet(`apis/${apiId}/swagger`, asUserId, callback);
+}
+
+export function getApiSubscriptions(apiId: string, callback: Callback<WickedCollection<WickedSubscription>>): void {
+    getApiSubscriptionsAs(apiId, null, callback);
+}
+
+export function getApiSubscriptionsAs(apiId: string, asUserId: string, callback: Callback<WickedCollection<WickedSubscription>>): void {
+    apiGet(`apis/${apiId}/subscriptions`, asUserId, callback);
+}
+
+// PLANS
+
+export function getApiPlans(apiId: string, callback: Callback<WickedApiPlan[]>): void {
+    getApiPlansAs(apiId, null, callback);
+}
+
+export function getApiPlansAs(apiId: string, asUserId: string, callback: Callback<WickedApiPlan[]>): void {
+    apiGet(`apis/${apiId}/plans`, asUserId, callback);
+}
+
+export function getPlans(callback: Callback<WickedApiPlanCollection>): void {
+    apiGet('plans', null, callback);
+}
+
+// GROUPS
+
+export function getGroups(callback: Callback<WickedGroupCollection>): void {
+    apiGet('groups', null, callback);
+}
+
+// USERS
+
+export function getUserByCustomId(customId: string, callback: Callback<WickedUserShortInfo[]>): void {
+    apiGet(`users?customId=${qs.escape(customId)}`, null, callback);
+}
+
+export function getUserByEmail(email: string, callback: Callback<WickedUserShortInfo[]>): void {
+    apiGet(`users?email=${qs.escape(email)}`, null, callback);
+}
+
+export function getUsers(options: WickedGetOptions, callback: Callback<WickedUserShortInfo[]>): void {
+    getUsersAs(options, null, callback);
+}
+
+export function getUsersAs(options: WickedGetOptions, asUserId: string, callback: Callback<WickedUserShortInfo[]>): void {
+    let o = validateGetOptions(options);
+    let url = buildUrl('users', o);
+    apiGet(url, asUserId, callback);
+}
+
+export function createUser(userCreateInfo: WickedUserCreateInfo, callback: Callback<WickedUserInfo>): void {
+    createUserAs(userCreateInfo, null, callback);
+}
+
+export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: string, callback: Callback<WickedUserInfo>): void {
+    apiPost('users', userCreateInfo, asUserId, callback);
+}
+
+export function getUser(userId: string, callback: Callback<WickedUserInfo>): void {
+    getUserAs(userId, null, callback);
+}
+
+export function getUserAs(userId: string, asUserId: string, callback: Callback<WickedUserInfo>): void {
+    apiGet(`users/${userId}`, asUserId, callback);
+}
+
+export function deleteUserPassword(userId: string, callback: ErrorCallback): void {
+    deleteUserPasswordAs(userId, null, callback);
+}
+
+export function deleteUserPasswordAs(userId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`users/${userId}/password`, asUserId, callback);
+}
+
+// APPLICATIONS
+
+export function getApplications(options: WickedGetCollectionOptions, callback: Callback<WickedCollection<WickedApplication>>): void {
+    getApplicationsAs(options, null, callback);
+}
+
+export function getApplicationsAs(options: WickedGetCollectionOptions, asUserId: string, callback: Callback<WickedCollection<WickedApplication>>): void {
+    const o = validateGetCollectionOptions(options);
+    const url = buildUrl('applications', o);
+    apiGet(url, asUserId, callback);
+}
+
+export function createApplication(appCreateInfo: WickedApplicationCreateInfo, callback: Callback<WickedApplication>): void {
+    createApplicationAs(appCreateInfo, null, callback);
+}
+
+export function createApplicationAs(appCreateInfo: WickedApplicationCreateInfo, asUserId: string, callback: Callback<WickedApplication>): void {
+    apiPost('applications', appCreateInfo, asUserId, callback);
+}
+
+export function getApplicationRoles(callback: Callback<WickedApplicationRole[]>): void {
+    apiGet('applications/roles', null, callback);
+}
+
+export function getApplication(appId: string, callback: Callback<WickedApplication>): void {
+    getApplicationAs(appId, null, callback);
+}
+
+export function getApplicationAs(appId: string, asUserId: string, callback: Callback<WickedApplication>): void {
+    apiGet(`applications/${appId}`, asUserId, callback);
+}
+
+export function patchApplication(appId: string, appPatchInfo: WickedApplicationCreateInfo, callback: Callback<WickedApplication>): void {
+    patchApplicationAs(appId, appPatchInfo, null, callback);
+}
+
+export function patchApplicationAs(appId: string, appPatchInfo: WickedApplicationCreateInfo, asUserId: string, callback: Callback<WickedApplication>): void {
+    apiPatch(`applications/${appId}`, appPatchInfo, asUserId, callback);
+}
+
+export function deleteApplication(appId: string, callback: ErrorCallback): void {
+    deleteApplicationAs(appId, null, callback);
+}
+
+export function deleteApplicationAs(appId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`applications/${appId}`, asUserId, callback);
+}
+
+export function addApplicationOwner(appId: string, email: string, role: WickedApplicationRoleType, callback: Callback<WickedApplication>): void {
+    addApplicationOwnerAs(appId, email, role, null, callback);
+}
+
+export function addApplicationOwnerAs(appId: string, email: string, role: WickedApplicationRoleType, asUserId: string, callback: Callback<WickedApplication>): void {
+    const body = {
+        email: email,
+        role: role
+    };
+    apiPost(`applications/${appId}/owners`, body, asUserId, callback);
+}
+
+export function deleteApplicationOwner(appId: string, email: string, callback: Callback<WickedApplication>): void {
+    deleteApplicationOwnerAs(appId, email, null, callback);
+}
+
+export function deleteApplicationOwnerAs(appId: string, email: string, asUserId: string, callback: Callback<WickedApplication>): void {
+    apiDelete(`applications/${appId}/owners?email=${qs.escape(email)}`, asUserId, callback);
+}
+
+// SUBSCRIPTIONS
+
+export function getSubscriptions(appId: string, callback: Callback<WickedSubscription[]>): void {
+    getSubscriptionsAs(appId, null, callback);
+}
+
+export function getSubscriptionsAs(appId: string, asUserId: string, callback: Callback<WickedSubscription[]>): void {
+    apiGet(`applications/${appId}/subscriptions`, asUserId, callback);
+}
+
+export function getSubscriptionByClientId(clientId: string, apiId: string, callback: Callback<WickedSubscriptionInfo>): void {
+    getSubscriptionByClientIdAs(clientId, apiId, null, callback);
+}
+
+export function getSubscriptionByClientIdAs(clientId: string, apiId: string, asUserId: string, callback: Callback<WickedSubscriptionInfo>): void {
+    _getSubscriptionByClientId(clientId, apiId, asUserId, callback);
+}
+
+export function createSubscription(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, callback: Callback<WickedSubscription>): void {
+    createSubscriptionAs(appId, subsCreateInfo, null, callback);
+}
+
+export function createSubscriptionAs(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, asUserId: string, callback: Callback<WickedSubscription>): void {
+    apiPost(`applications/${appId}/subscriptions`, subsCreateInfo, asUserId, callback);
+}
+
+export function getSubscription(appId: string, apiId: string, callback: Callback<WickedSubscription>): void {
+    getSubscriptionAs(appId, apiId, null, callback);
+}
+
+export function getSubscriptionAs(appId: string, apiId: string, asUserId: string, callback: Callback<WickedSubscription>): void {
+    apiGet(`applications/${appId}/subscriptions/${apiId}`, asUserId, callback);
+}
+
+export function patchSubscription(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, callback: Callback<WickedSubscription>): void {
+    patchSubscriptionAs(appId, apiId, patchInfo, null, callback);
+}
+
+export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, asUserId: string, callback: Callback<WickedSubscription>): void {
+    apiPatch(`applications/${appId}/apis/${apiId}`, patchInfo, asUserId, callback);
+}
+
+// APPROVALS
+
+export function getApprovals(callback: Callback<WickedApproval[]>): void {
+    getApprovalsAs(null, callback);
+}
+
+export function getApprovalsAs(asUserId: string, callback: Callback<WickedApproval[]>): void {
+    apiGet('approvals', asUserId, callback);
+}
+
+export function getApproval(approvalId: string, callback: Callback<WickedApproval>): void {
+    getApprovalAs(approvalId, null, callback);
+}
+
+export function getApprovalAs(approvalId: string, asUserId: string, callback: Callback<WickedApproval>): void {
+    apiGet(`approvals/${approvalId}`, asUserId, callback);
+}
+
+// VERIFICATIONS
+
+export function createVerification(verification: WickedVerification, callback: ErrorCallback): void {
+    createVerificationAs(verification, null, callback);
+}
+
+export function createVerificationAs(verification: WickedVerification, asUserId: string, callback: ErrorCallback): void {
+    apiPost('verifications', verification, asUserId, callback);
+}
+
+export function getVerifications(callback: Callback<WickedVerification[]>): void {
+    getVerificationsAs(null, callback);
+}
+
+export function getVerificationsAs(asUserId: string, callback: Callback<WickedVerification[]>): void {
+    apiGet('verificaations', asUserId, callback);
+}
+
+export function getVerification(verificationId, callback: Callback<WickedVerification>): void {
+    getVerificationAs(verificationId, null, callback);
+}
+
+export function getVerificationAs(verificationId, asUserId: string, callback: Callback<WickedVerification>): void {
+    apiGet(`verifications/${verificationId}`, asUserId, callback);
+}
+
+export function deleteVerification(verificationId: string, callback: ErrorCallback): void {
+    deleteVerificationAs(verificationId, null, callback);
+}
+
+export function deleteVerificationAs(verificationId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`verifications/${verificationId}`, asUserId, callback);
+}
+
+// SYSTEM HEALTH
+
+export function getSystemHealth(callback: Callback<WickedComponentHealth[]>): void {
+    getSystemHealthAs(null, callback);
+}
+
+export function getSystemHealthAs(asUserId: string, callback: Callback<WickedComponentHealth[]>): void {
+    apiGet('systemhealth', asUserId, callback);
+}
+
+// TEMPLATES
+
+export function getChatbotTemplates(callback: Callback<WickedChatbotTemplates>): void {
+    getChatbotTemplatesAs(null, callback);
+}
+
+export function getChatbotTemplatesAs(asUserId: string, callback: Callback<WickedChatbotTemplates>): void {
+    apiGet('templates/chatbot', asUserId, callback);
+}
+
+export function getEmailTemplate(templateId: WickedEmailTemplateType, callback: Callback<string>): void {
+    getEmailTemplateAs(templateId, null, callback);
+}
+
+export function getEmailTemplateAs(templateId: WickedEmailTemplateType, asUserId: string, callback: Callback<string>): void {
+    apiGet(`templates/email/${templateId}`, asUserId, callback);
+}
+
+// AUTH-SERVERS
+
+export function getAuthServerNames(callback: Callback<string[]>): void {
+    getAuthServerNamesAs(null, callback);
+}
+
+export function getAuthServerNamesAs(asUserId: string, callback: Callback<string[]>): void {
+    apiGet('auth-servers', asUserId, callback);
+}
+
+export function getAuthServer(serverId: string, callback: Callback<WickedAuthServer>): void {
+    getAuthServerAs(serverId, null, callback);
+}
+
+export function getAuthServerAs(serverId: string, asUserId: string, callback: Callback<WickedAuthServer>): void {
+    apiGet(`auth-servers/${serverId}`, asUserId, callback);
+}
+
+// WEBHOOKS
+
+export function getWebhookListeners(callback: Callback<WickedWebhookListener[]>): void {
+    getWebhookListenersAs(null, callback);
+}
+
+export function getWebhookListenersAs(asUserId: string, callback: Callback<WickedWebhookListener[]>): void {
+    apiGet('webhooks/listeners', asUserId, callback);
+}
+
+export function upsertWebhookListener(listenerId: string, listener: WickedWebhookListener, callback: ErrorCallback): void {
+    upsertWebhookListenerAs(listenerId, listener, null, callback);
+}
+
+export function upsertWebhookListenerAs(listenerId: string, listener: WickedWebhookListener, asUserId: string, callback: ErrorCallback): void {
+    apiPut(`webhooks/listeners/${listenerId}`, listener, asUserId, callback);
+}
+
+export function deleteWebhookListener(listenerId: string, callback: ErrorCallback): void {
+    deleteWebhookListenerAs(listenerId, null, callback);
+}
+
+export function deleteWebhookListenerAs(listenerId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`webhooks/listeners/${listenerId}`, asUserId, callback);
+}
+
+export function getWebhookEvents(listenerId: string, callback: Callback<WickedEvent[]>): void {
+    getWebhookEventsAs(listenerId, null, callback);
+}
+
+export function getWebhookEventsAs(listenerId: string, asUserId: string, callback: Callback<WickedEvent[]>): void {
+    apiGet(`webhooks/events/${listenerId}`, asUserId, callback);
+}
+
+export function flushWebhookEvents(listenerId: string, callback: ErrorCallback): void {
+    flushWebhookEventsAs(listenerId, null, callback);
+}
+
+export function flushWebhookEventsAs(listenerId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`webhooks/events/${listenerId}`, asUserId, callback);
+}
+
+export function deleteWebhookEvent(listenerId: string, eventId: string, callback: ErrorCallback): void {
+    deleteWebhookEventAs(listenerId, eventId, null, callback);
+}
+
+export function deleteWebhookEventAs(listenerId: string, eventId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`webhooks/events/${listenerId}/${eventId}`, asUserId, callback);
+}
+
+// REGISTRATION POOLS
+
+export function getRegistrationPools(callback: Callback<WickedPoolMap>): void {
+    getRegistrationPoolsAs(null, callback);
+}
+
+export function getRegistrationPoolsAs(asUserId: string, callback: Callback<WickedPoolMap>): void {
+    apiGet('pools', asUserId, callback);
+}
+
+export function getRegistrationPool(poolId: string, callback: Callback<WickedPool>): void {
+    getRegistrationPoolAs(poolId, null, callback);
+}
+
+export function getRegistrationPoolAs(poolId: string, asUserId: string, callback: Callback<WickedPool>): void {
+    apiGet(`pools/${poolId}`, asUserId, callback);
+}
+
+// NAMESPACES
+
+export function getPoolNamespaces(poolId: string, options: WickedGetCollectionOptions, callback: Callback<WickedCollection<WickedNamespace>>): void {
+    getPoolNamespacesAs(poolId, options, null, callback);
+}
+
+export function getPoolNamespacesAs(poolId: string, options: WickedGetCollectionOptions, asUserId: string, callback: Callback<WickedCollection<WickedNamespace>>): void {
+    const o = validateGetCollectionOptions(options);
+    const url = buildUrl(`pools/${poolId}/namespaces`, options);
+    apiGet(url, asUserId, callback);
+}
+
+export function getPoolNamespace(poolId: string, namespaceId: string, callback: Callback<WickedNamespace>): void {
+    getPoolNamespaceAs(poolId, namespaceId, null, callback);
+}
+
+export function getPoolNamespaceAs(poolId: string, namespaceId: string, asUserId: string, callback: Callback<WickedNamespace>): void {
+    apiGet(`pools/${poolId}/namespaces/${namespaceId}`, asUserId, callback);
+}
+
+export function upsertPoolNamespace(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, callback: ErrorCallback): void {
+    upsertPoolNamespaceAs(poolId, namespaceId, namespaceInfo, null, callback);
+}
+
+export function upsertPoolNamespaceAs(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, asUserId: string, callback: ErrorCallback): void {
+    apiPut(`pools/${poolId}/namespaces/${namespaceId}`, namespaceInfo, asUserId, callback);
+}
+
+export function deletePoolNamespace(poolId: string, namespaceId: string, callback: ErrorCallback): void {
+    deletePoolNamespaceAs(poolId, namespaceId, null, callback);
+}
+
+export function deletePoolNamespaceAs(poolId: string, namespaceId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`pools/${poolId}/namespaces/${namespaceId}`, asUserId, callback);
+}
+
+// REGISTRATIONS
+
+export function getPoolRegistrations(poolId: string, options: WickedGetRegistrationOptions, callback: Callback<WickedCollection<WickedRegistration>>): void {
+    getPoolRegistrationsAs(poolId, options, null, callback);
+}
+
+export function getPoolRegistrationsAs(poolId: string, options: WickedGetRegistrationOptions, asUserId: string, callback: Callback<WickedCollection<WickedRegistration>>): void {
+    const o = validateGetCollectionOptions(options) as WickedGetRegistrationOptions;
+    if (options.namespace)
+        o.namespace = options.namespace;
+    const url = buildUrl(`registrations/pools/${poolId}`, o);
+    apiGet(url, asUserId, callback);
+}
+
+export function getUserRegistrations(poolId: string, userId: string, callback: Callback<WickedCollection<WickedRegistration>>): void {
+    getUserRegistrationsAs(poolId, userId, null, callback);
+}
+
+export function getUserRegistrationsAs(poolId: string, userId: string, asUserId: string, callback: Callback<WickedCollection<WickedRegistration>>): void {
+    apiGet(`registrations/pools/${poolId}/users/${userId}`, asUserId, callback);
+}
+
+export function upsertUserRegistration(poolId: string, userId: string, userRegistration: WickedRegistration, callback: ErrorCallback): void {
+    upsertUserRegistrationAs(poolId, userId, userRegistration, null, callback);
+}
+
+export function upsertUserRegistrationAs(poolId: string, userId: string, userRegistration: WickedRegistration, asUserId: string, callback: ErrorCallback): void {
+    apiPut(`registrations/pools/${poolId}/users/${userId}`, userRegistration, asUserId, callback);
+}
+
+export function deleteUserRegistration(poolId: string, userId: string, namespaceId: string, callback: ErrorCallback): void {
+    deleteUserRegistrationAs(poolId, userId, namespaceId, null, callback);
+}
+
+export function deleteUserRegistrationAs(poolId: string, userId: string, namespaceId: string, asUserId: string, callback: ErrorCallback): void {
+    const o = {} as any;
+    if (namespaceId)
+        o.namespace = namespaceId;
+    const url = buildUrl(`registrations/pools/${poolId}/users/${userId}`, o);
+    apiDelete(url, asUserId, callback);
+}
+
+export function getAllUserRegistrations(userId: string, callback: Callback<WickedRegistrationMap>): void {
+    getAllUserRegistrationsAs(userId, null, callback);
+}
+
+export function getAllUserRegistrationsAs(userId: string, asUserId: string, callback: Callback<WickedRegistrationMap>): void {
+    apiGet(`registrations/users/${userId}`, asUserId, callback);
+}
+
+// GRANTS
+
+export function getUserGrants(userId: string, options: WickedGetOptions, callback: Callback<WickedCollection<WickedGrant>>): void {
+    getUserGrantsAs(userId, options, null, callback);
+}
+
+export function getUserGrantsAs(userId: string, options: WickedGetOptions, asUserId: string, callback: Callback<WickedCollection<WickedGrant>>): void {
+    const o = validateGetOptions(options);
+    const url = buildUrl(`grants/${userId}`, o);
+    apiGet(url, asUserId, callback);
+}
+
+export function deleteAllUserGrants(userId: string, callback: ErrorCallback): void {
+    deleteAllUserGrantsAs(userId, null, callback);
+}
+
+export function deleteAllUserGrantsAs(userId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`grants/${userId}`, asUserId, callback);
+}
+
+export function getUserGrant(userId: string, applicationId: string, apiId: string, callback: Callback<WickedGrant>): void {
+    getUserGrantAs(userId, applicationId, apiId, null, callback);
+}
+
+export function getUserGrantAs(userId: string, applicationId: string, apiId: string, asUserId: string, callback: Callback<WickedGrant>): void {
+    apiGet(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, asUserId, callback);
+}
+
+export function upsertUserGrant(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, callback: ErrorCallback): void {
+    upsertUserGrantAs(userId, applicationId, apiId, grantInfo, null, callback);
+}
+
+export function upsertUserGrantAs(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, asUserId: string, callback: ErrorCallback): void {
+    apiPut(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, grantInfo, asUserId, callback);
+}
+
+export function deleteUserGrant(userId: string, applicationId: string, apiId: string, callback: ErrorCallback): void {
+    deleteUserGrantAs(userId, applicationId, apiId, null, callback);
+}
+
+export function deleteUserGrantAs(userId: string, applicationId: string, apiId: string, asUserId: string, callback: ErrorCallback): void {
+    apiDelete(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, asUserId, callback);
+}
 
 // ======= CORRELATION ID HANDLER =======
 
@@ -687,7 +1334,7 @@ export function correlationIdHandler(): ExpressHandler {
 
 // ======= IMPLEMENTATION ======
 
-function _initialize(options: WickedInitOptions, callback: WickedGlobalsCallback): void {
+function _initialize(options: WickedInitOptions, callback: Callback<WickedGlobals>): void {
     debug('initialize()');
     if (!callback && (typeof (options) === 'function')) {
         callback = options;
@@ -799,6 +1446,34 @@ function validateOptions(options) {
     return null;
 }
 
+function validateGetOptions(options: WickedGetOptions): WickedGetOptions {
+    const o = {} as WickedGetOptions;
+    if (options) {
+        if (options.offset)
+            o.offset = options.offset;
+        if (options.limit)
+            o.limit = options.limit;
+    }
+    return o;
+}
+
+function validateGetCollectionOptions(options: WickedGetCollectionOptions): WickedGetCollectionOptions {
+    const o = {} as WickedGetCollectionOptions;
+    if (options) {
+        if (options.filter)
+            o.filter = options.filter;
+        if (options.offset)
+            o.offset = options.offset;
+        if (options.limit)
+            o.limit = options.limit;
+        if (options.order_by)
+            o.order_by = options.order_by;
+        if (options.no_cache)
+            o.no_cache = options.no_cache;
+    }
+    return o;
+}
+
 function checkConfigHash() {
     debug('checkConfigHash()');
 
@@ -850,7 +1525,7 @@ const DEFAULT_AWAIT_OPTIONS = {
     retryDelay: 1000
 };
 
-function _awaitUrl(url: string, options: WickedAwaitOptions, callback: WickedObjectCallback) {
+function _awaitUrl(url: string, options: WickedAwaitOptions, callback: Callback<any>) {
     debug('awaitUrl(): ' + url);
     if (!callback && (typeof (options) === 'function')) {
         callback = options;
@@ -904,27 +1579,6 @@ function _awaitKongAdapter(awaitOptions, callback) {
     });
 }
 
-function awaitKongOAuth2(awaitOptions, callback) {
-    debug('awaitKongOAuth2()');
-    checkInitialized('awaitKongOAuth2');
-    if (!callback && (typeof (awaitOptions) === 'function')) {
-        callback = awaitOptions;
-        awaitOptions = null;
-    }
-    if (awaitOptions) {
-        debug('awaitOptions:');
-        debug(awaitOptions);
-    }
-
-    const oauth2PingUrl = _getInternalKongOAuth2Url() + 'ping';
-    _awaitUrl(oauth2PingUrl, awaitOptions, function (err, body) {
-        if (err)
-            return callback(err);
-        wickedStorage.kongOAuth2Initialized = true;
-        return callback(null, body);
-    });
-}
-
 function _initMachineUser(serviceId: string, callback: ErrorCallback) {
     debug('initMachineUser()');
     checkInitialized('initMachineUser');
@@ -937,7 +1591,7 @@ function _initMachineUser(serviceId: string, callback: ErrorCallback) {
     });
 }
 
-function retrieveOrCreateMachineUser(serviceId: string, callback: WickedUserInfoCallback) {
+function retrieveOrCreateMachineUser(serviceId: string, callback: Callback<WickedUserInfo>) {
     debug('retrieveOrCreateMachineUser()');
     if (!/^[a-zA-Z\-_0-9]+$/.test(serviceId))
         return callback(new Error('Invalid Service ID, must only contain a-z, A-Z, 0-9, - and _.'));
@@ -1166,16 +1820,11 @@ function checkKongAdapterInitialized(callingFunction) {
         throw new Error('Before calling ' + callingFunction + '(), awaitKongAdapter() must have been called and has to have returned successfully.');
 }
 
-function checkKongOAuth2Initialized(callingFunction) {
-    if (!wickedStorage.kongOAuth2Initialized)
-        throw new Error('Before calling ' + callingFunction + '(), awaitKongOAuth2() must have been called and has to have returned successfully.');
-}
-
 function guessServiceUrl(defaultHost, defaultPort) {
     debug('guessServiceUrl() - defaultHost: ' + defaultHost + ', defaultPort: ' + defaultPort);
     let url = 'http://' + defaultHost + ':' + defaultPort + '/';
-    // Are we not running on Linux? Then guess we're in local development mode.
-    if (os.type() != 'Linux') {
+    // Are we not running containerized? Then guess we're in local development mode.
+    if (!isContainerized) {
         const defaultLocalIP = getDefaultLocalIP();
         url = 'http://' + defaultLocalIP + ':' + defaultPort + '/';
     }
@@ -1322,7 +1971,7 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
 
     const url = _getInternalApiUrl() + urlPath;
     debug(method + ' ' + url);
-    const reqInfo: any = {
+    const reqInfo: RequestBody = {
         method: method,
         url: url,
         timeout: WICKED_TIMEOUT
@@ -1386,172 +2035,31 @@ function nice(methodName) {
     return methodName.substring(0, 1) + methodName.substring(1).toLowerCase();
 }
 
-// ====== OAUTH2 ======
-
-function kongAdapterAction(method, url, body, callback) {
-    const actionUrl = _getInternalKongAdapterUrl() + url;
-    const reqBody: RequestBody = {
-        method: method,
-        url: actionUrl,
-        timeout: KONG_TIMEOUT
-    };
-    if (method !== 'GET') {
-        reqBody.json = true;
-        reqBody.body = body;
+function buildUrl(base, queryParams) {
+    let url = base;
+    let first = true;
+    for (let p in queryParams) {
+        if (first) {
+            url += '?';
+            first = false;
+        } else {
+            url += '&';
+        }
+        const v = queryParams[p];
+        if (typeof v === 'number')
+            url += v;
+        else if (typeof v === 'string')
+            url += qs.escape(v);
+        else if (typeof v === 'boolean')
+            url += v ? 'true' : 'false';
+        else // Object or array or whatever
+            url += qs.escape(JSON.stringify(v));
     }
-    request(reqBody, function (err, res, body) {
-        if (err) {
-            debug(method + ' to ' + actionUrl + ' failed.');
-            debug(err);
-            return callback(err);
-        }
-        if (res.statusCode > 299) {
-            debug('Unexpected status code.');
-            debug('Status Code: ' + res.statusCode);
-            debug('Body: ' + body);
-            const err = new WickedError(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.', res.statusCode, body);
-            return callback(err);
-        }
-        let jsonBody = null;
-        try {
-            jsonBody = getJson(body);
-            debug(jsonBody);
-        } catch (ex) {
-            const err = new WickedError(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.', 500, body);
-            return callback(err);
-        }
-        return callback(null, jsonBody);
-    });
+    return url;
 }
 
-function _getRedirectUriWithAccessToken(userInfo, callback) {
-    debug('getRedirectUriWithAccessToken()');
-    _oauth2AuthorizeImplicit(userInfo, callback);
-}
 
-function _oauth2AuthorizeImplicit(userInfo, callback) {
-    debug('oauth2AuthorizeImplicit()');
-    checkInitialized('oauth2AuthorizeImplicit');
-    checkKongAdapterInitialized('oauth2AuthorizeImplicit');
-
-    if (!userInfo.client_id)
-        return callback(new Error('client_id is mandatory'));
-    if (!userInfo.api_id)
-        return callback(new Error('api_id is mandatory'));
-    if (!userInfo.authenticated_userid)
-        return callback(new Error('authenticated_userid is mandatory'));
-    if (!userInfo.auth_server)
-        console.error('WARNING: wicked-sdk: oauth2AuthorizeImplicit() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
-
-    kongAdapterAction('POST', 'oauth2/token/implicit', userInfo, function (err, redirectUri) {
-        if (err)
-            return callback(err);
-        callback(null, redirectUri);
-    });
-}
-
-function _oauth2GetAuthorizationCode(userInfo, callback) {
-    debug('oauth2GetAuthorizationCode()');
-    checkInitialized('oauth2GetAuthorizationCode');
-    checkKongAdapterInitialized('oauth2GetAuthorizationCode');
-
-    if (!userInfo.client_id)
-        return callback(new Error('client_id is mandatory'));
-    if (!userInfo.api_id)
-        return callback(new Error('api_id is mandatory'));
-    if (!userInfo.authenticated_userid)
-        return callback(new Error('authenticated_userid is mandatory'));
-    if (!userInfo.auth_server)
-        console.error('WARNING: wicked-sdk: oauth2GetAuthorizationCode() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
-
-    kongAdapterAction('POST', 'oauth2/token/code', userInfo, function (err, redirectUri) {
-        if (err)
-            return callback(err);
-        callback(null, redirectUri);
-    });
-}
-
-function _oauth2GetAccessTokenPasswordGrant(userInfo, callback) {
-    debug('oauth2GetAccessTokenPasswordGrant()');
-    checkInitialized('oauth2GetAccessTokenPasswordGrant');
-    checkKongAdapterInitialized('oauth2GetAccessTokenPasswordGrant');
-
-    if (!userInfo.client_id)
-        return callback(new Error('client_id is mandatory'));
-    if (!userInfo.api_id)
-        return callback(new Error('api_id is mandatory'));
-    if (!userInfo.authenticated_userid)
-        return callback(new Error('authenticated_userid is mandatory'));
-    if (!userInfo.auth_server)
-        console.error('WARNING: wicked-sdk: oauth2GetAccessTokenPasswordGrant() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
-
-    kongAdapterAction('POST', 'oauth2/token/password', userInfo, function (err, accessToken) {
-        if (err)
-            return callback(err);
-        callback(null, accessToken);
-    });
-}
-
-function _oauth2RefreshAccessToken(tokenInfo, callback) {
-    debug('oauth2RefreshAccessToken');
-    checkInitialized('oauth2RefreshAccessToken');
-    checkKongAdapterInitialized('oauth2RefreshAccessToken');
-
-    if (!tokenInfo.refresh_token)
-        return callback(new Error('refresh_token is mandatory'));
-    if (!tokenInfo.client_id)
-        return callback(new Error('client_id is mandatory'));
-    if (!tokenInfo.auth_server)
-        console.error('WARNING: wicked-sdk: oauth2RefreshAccessToken() - auth_server is not passed in to call; this means it is not checked whether the API has the correct auth server configured.');
-
-    kongAdapterAction('POST', 'oauth2/token/refresh', tokenInfo, function (err, accessToken) {
-        if (err)
-            return callback(err);
-        callback(null, accessToken);
-    });
-}
-
-function _oauth2GetAccessTokenInfo(accessToken, callback) {
-    debug('oauth2GetAccessTokenInfo()');
-    checkInitialized('oauth2GetAccessTokenInfo');
-    checkKongAdapterInitialized('oauth2GetAccessTokenInfo');
-
-    kongAdapterAction('GET', 'oauth2/token?access_token=' + qs.escape(accessToken), null, function (err, tokenInfo) {
-        if (err)
-            return callback(err);
-        callback(null, tokenInfo);
-    });
-}
-
-function _oauth2GetRefreshTokenInfo(refreshToken, callback) {
-    debug('oauth2GetRefreshTokenInfo()');
-    checkInitialized('oauth2GetRefreshTokenInfo');
-    checkKongAdapterInitialized('oauth2GetRefreshTokenInfo');
-
-    kongAdapterAction('GET', 'oauth2/token?refresh_token=' + qs.escape(refreshToken), null, function (err, tokenInfo) {
-        if (err)
-            return callback(err);
-        callback(null, tokenInfo);
-    });
-}
-
-function _revokeAccessToken(accessToken, callback) {
-    debug(`revokeAccessToken(${accessToken})`);
-    checkInitialized('revokeAccessToken()');
-    checkKongAdapterInitialized('revokeAccessToken()');
-
-    kongAdapterAction('DELETE', 'oauth2/token?access_token=' + qs.escape(accessToken), null, callback);
-}
-
-function _revokeAccessTokensByUserId(authenticatedUserId, callback) {
-    debug(`revokeAccessTokenByUserId(${authenticatedUserId})`);
-    checkInitialized('revokeAccessTokenByUserId()');
-    checkKongAdapterInitialized('revokeAccessTokenByUserId()');
-
-    kongAdapterAction('DELETE', 'oauth2/token?authenticated_userid=' + qs.escape(authenticatedUserId), null, callback);
-}
-
-function _getSubscriptionByClientId(clientId, apiId, callback) {
+function _getSubscriptionByClientId(clientId: string, apiId: string, asUserId: string, callback: Callback<WickedSubscriptionInfo>): void {
     debug('getSubscriptionByClientId()');
     checkInitialized('getSubscriptionByClientId');
 
@@ -1561,7 +2069,7 @@ function _getSubscriptionByClientId(clientId, apiId, callback) {
     }
 
     // Check whether we know this client ID, otherwise we won't bother.
-    _apiGet('subscriptions/' + qs.escape(clientId), null, null, function (err, subsInfo) {
+    _apiGet('subscriptions/' + qs.escape(clientId), asUserId, 'read_subscriptions', function (err, subsInfo) {
         if (err) {
             debug('GET of susbcription for client_id ' + clientId + ' failed.');
             debug(err);
@@ -1579,98 +2087,4 @@ function _getSubscriptionByClientId(clientId, apiId, callback) {
 
         return callback(null, subsInfo);
     });
-}
-
-function kongOAuth2Action(method, url, body, errorOnUnexpectedStatusCode, callback) {
-    const actionUrl = _getInternalKongOAuth2Url() + url;
-    const reqBody: RequestBody = {
-        method: method,
-        url: actionUrl,
-        timeout: KONG_TIMEOUT
-    };
-    if (method !== 'GET') {
-        reqBody.json = true;
-        reqBody.body = body;
-    }
-    request(reqBody, function (err, res, body) {
-        if (err) {
-            debug(method + ' to ' + actionUrl + ' failed.');
-            debug(err);
-            return callback(err);
-        }
-        if (errorOnUnexpectedStatusCode) {
-            if (res.statusCode > 299) {
-                debug('Unexpected status code.');
-                debug('Status Code: ' + res.statusCode);
-                debug('Body: ' + body);
-                const err = new WickedError(method + ' to ' + actionUrl + ' returned unexpected status code: ' + res.statusCode + '. Details in err.body and err.statusCode.', res.statusCode, body);
-                return callback(err);
-            }
-        }
-        let jsonBody = null;
-        try {
-            jsonBody = getJson(body);
-            debug(jsonBody);
-        } catch (ex) {
-            const err = new WickedError(method + ' to ' + actionUrl + ' returned non-parseable JSON: ' + ex.message + '. Possible details in err.body.', 500, body);
-            return callback(err);
-        }
-        return callback(null, jsonBody);
-    });
-}
-
-function _v1_oauth2Authorize(authRequest, callback) {
-    debug('v1_oauth2Authorize()');
-    checkInitialized('v1_oauth2Authorize()');
-    checkKongOAuth2Initialized('v1_oauth2Authorize()');
-
-    kongOAuth2Action('POST', 'oauth2/authorize', authRequest, false, callback);
-}
-
-function _v1_oauth2Token(tokenRequest, callback) {
-    debug('v1_oauth2Token()');
-    checkInitialized('v1_oauth2Token()');
-    checkKongOAuth2Initialized('v1_oauth2Token()');
-
-    kongOAuth2Action('POST', 'oauth2/token', tokenRequest, false, callback);
-}
-
-function _v1_oauth2GetAccessTokenInfo(accessToken, callback) {
-    debug('v1_oauth2GetAccessTokenInfo()');
-    checkInitialized('v1_oauth2GetAccessTokenInfo');
-    checkKongOAuth2Initialized('v1_oauth2GetAccessTokenInfo');
-
-    kongOAuth2Action('GET', 'oauth2_tokens?access_token=' + qs.escape(accessToken), null, true, function (err, tokenInfo) {
-        if (err)
-            return callback(err);
-        callback(null, tokenInfo);
-    });
-}
-
-function _v1_oauth2GetRefreshTokenInfo(refreshToken, callback) {
-    debug('v1_oauth2GetRefreshTokenInfo()');
-    checkInitialized('v1_oauth2GetRefreshTokenInfo');
-    checkKongOAuth2Initialized('v1_oauth2GetRefreshTokenInfo');
-
-    kongOAuth2Action('GET', 'oauth2_tokens?refresh_token=' + qs.escape(refreshToken), null, true, function (err, tokenInfo) {
-        if (err)
-            return callback(err);
-        callback(null, tokenInfo);
-    });
-}
-
-function _v1_revokeAccessToken(accessToken, callback) {
-    debug(`v1_revokeAccessToken(${accessToken})`);
-    checkInitialized('v1_revokeAccessToken()');
-    checkKongOAuth2Initialized('v1_revokeAccessToken');
-
-    kongOAuth2Action('DELETE', 'oauth2_tokens?access_token=' + qs.escape(accessToken), null, true, callback);
-}
-
-function _v1_revokeAccessTokensByUserId(authenticatedUserId, callback) {
-    debug(`v1_revokeAccessTokensByUserId(${authenticatedUserId})`);
-    checkInitialized('v1_revokeAccessTokensByUserId()');
-    checkKongOAuth2Initialized('v1_revokeAccessTokensByUserId');
-
-    kongOAuth2Action('DELETE', 'oauth2_tokens?authenticated_userid=' + qs.escape(authenticatedUserId), null, true, callback);
 }
