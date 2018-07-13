@@ -268,10 +268,12 @@ export interface WickedApi {
     name: string,
     desc: string,
     auth: string,
-    authServers?: string[],
+    tags?: string[],
     authMethods?: string[],
     registrationPool?: string,
     requiredGroup?: string,
+    passthroughUsers?: boolean,
+    passthroughScopeUrl?: string,
     settings: WickedApiSettings,
     _links?: any
 }
