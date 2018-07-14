@@ -262,6 +262,18 @@ export interface WickedUserInfo extends WickedUserCreateInfo {
     applications?: WickedApplication[]
 }
 
+export interface OidcProfile {
+    sub: string,
+    email?: string,
+    email_verified?: boolean,
+    preferred_username?: string,
+    username?: string,
+    name?: string,
+    given_name?: string,
+    family_name?: string,
+    phone?: string,
+    [key: string]: any
+};
 
 export interface WickedApi {
     id: string,
