@@ -668,6 +668,23 @@ export interface ExpressHandler {
     (req, res, next?): void
 }
 
+
+// ====================
+// PASSTHROUGH HANDLING TYPES
+// ====================
+
+export interface PassthroughScopeRequest {
+    scope?: string[],
+    profile: OidcProfile
+}
+
+export interface PassthroughScopeResponse {
+    allow: boolean,
+    error_message?: string,
+    authenticated_userid: string,
+    authenticated_scope?: string[]
+}
+
 // ======= INITIALIZATION =======
 
 export function initialize(options: WickedInitOptions, callback: Callback<WickedGlobals>): void {
