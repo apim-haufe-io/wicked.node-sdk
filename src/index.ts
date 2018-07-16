@@ -443,8 +443,8 @@ export interface WickedPool {
     id: string,
     name: string,
     requiresNamespace?: boolean,
-    // Disallow interactive registration
-    disallowRegister?: boolean,
+    // Disable interactive registration
+    disableRegister?: boolean,
     properties: WickedPoolProperty[]
 }
 
