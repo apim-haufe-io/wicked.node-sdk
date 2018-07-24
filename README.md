@@ -1,6 +1,12 @@
 # wicked.haufe.io SDK
 
-This node.js module is the SDK for building plugins and additions to the wicked.haufe.io API Management system.
+## DISCLAIMER
+
+**IMPORTANT**: This is the documentation of the wicked.haufe.io node SDK as of version 1.0.0! It will **NOT** work with previous versions of wicked.haufe.io.
+
+## Introduction
+
+This node.js module is an SDK for building plugins and additions to the wicked.haufe.io API Management system.
 
 You can find more information on wicked.haufe.io here:
 
