@@ -627,6 +627,7 @@ export interface WickedCollection<T> {
 export interface KongApi {
     created_at?: number,
     hosts?: string[],
+    uris?: string[],
     http_if_terminated?: boolean,
     https_only?: boolean,
     id?: string,
