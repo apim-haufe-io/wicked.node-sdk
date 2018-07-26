@@ -625,24 +625,66 @@ export interface WickedCollection<T> {
 // ====================
 
 export interface KongApi {
-    retries: number,
-    upstream_send_timeout: number,
-    upstream_connect_timeout: number,
-    id: string,
-    upstream_read_timeout: number,
-    strip_uri: boolean,
-    created_at: number,
-    upstream_url: string,
+    created_at?: number,
+    hosts?: string[],
+    http_if_terminated?: boolean,
+    https_only?: boolean,
+    id?: string,
     name: string,
-    uris: string[],
+    preserve_host?: boolean,
+    retries?: number,
+    strip_uri?: boolean,
+    upstream_connect_timeout?: number,
+    upstream_read_timeout?: number,
+    upstream_send_timeout?: number,
+    upstream_url: string
+}
+
+export enum ProtocolType {
+    http = 'http',
+    https = 'https'
+}
+
+export interface KongService {
+    id?: string,
+    name: string,
+    created_at?: number,
+    updated_at?: number,
+    protocol: ProtocolType,
+    host: string,
+    port: number,
+    path: string,
+    retries?: number,
+    connect_timeout?: number,
+    read_timeout?: number,
+    write_timeout?: number,
+}
+
+export interface KongRoute {
+    id?: string,
+    created_at?: number,
+    updated_at?: number,
+    protocols: ProtocolType[],
+    methods?: string[],
+    hosts?: string[],
+    paths?: string[],
+    regex_priority?: number,
+    strip_path: boolean,
     preserve_host: boolean,
-    http_if_terminated: boolean,
-    https_only: boolean
+    service: {
+        id: string
+    }
 }
 
 export interface KongPlugin {
+    id?: string,
     name: string,
-    config: any
+    enabled: boolean,
+    api_id?: string,
+    service_id?: string,
+    route_id?: string,
+    consumer_id?: string,
+    config: object
 }
 
 // ====================
