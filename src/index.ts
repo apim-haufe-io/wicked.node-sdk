@@ -9,6 +9,7 @@ const uuid = require('node-uuid');
 
 import { WickedInitOptions, Callback, WickedGlobals, ErrorCallback, WickedAwaitOptions, WickedApiCollection, WickedApi, WickedCollection, WickedSubscription, WickedApiPlan, WickedApiPlanCollection, WickedGroupCollection, WickedUserShortInfo, WickedGetOptions, WickedUserCreateInfo, WickedUserInfo, WickedGetCollectionOptions, WickedApplicationCreateInfo, WickedApplication, WickedApplicationRole, WickedApplicationRoleType, WickedSubscriptionPatchInfo, WickedApproval, WickedVerification, WickedComponentHealth, WickedChatbotTemplates, WickedEmailTemplateType, WickedAuthServer, WickedWebhookListener, WickedEvent, WickedPoolMap, WickedPool, WickedNamespace, WickedGetRegistrationOptions, WickedRegistration, WickedRegistrationMap, WickedGrant, ExpressHandler, WickedSubscriptionInfo, WickedSubscriptionCreateInfo, OidcProfile, PassthroughScopeRequest, PassthroughScopeResponse, WickedSessionStoreType, WickedApiScopes, WickedApiSettings, WickedScopeGrant, KongApi, KongPlugin } from "./interfaces";
 export { WickedInitOptions, Callback, WickedGlobals, ErrorCallback, WickedAwaitOptions, WickedApiCollection, WickedApi, WickedCollection, WickedSubscription, WickedApiPlan, WickedApiPlanCollection, WickedGroupCollection, WickedUserShortInfo, WickedGetOptions, WickedUserCreateInfo, WickedUserInfo, WickedGetCollectionOptions, WickedApplicationCreateInfo, WickedApplication, WickedApplicationRole, WickedApplicationRoleType, WickedSubscriptionPatchInfo, WickedApproval, WickedVerification, WickedComponentHealth, WickedChatbotTemplates, WickedEmailTemplateType, WickedAuthServer, WickedWebhookListener, WickedEvent, WickedPoolMap, WickedPool, WickedNamespace, WickedGetRegistrationOptions, WickedRegistration, WickedRegistrationMap, WickedGrant, ExpressHandler, WickedSubscriptionInfo, WickedSubscriptionCreateInfo, OidcProfile, PassthroughScopeRequest, PassthroughScopeResponse, WickedSessionStoreType, WickedApiScopes, WickedApiSettings, WickedScopeGrant, KongApi, KongPlugin } from "./interfaces";
+export { WickedError } from './wicked-error';
 
 /** @hidden */
 import * as implementation from './implementation';
@@ -165,6 +166,20 @@ export function getInternalMailerUrl(): string {
 export function getInternalUrl(globalSettingsProperty: string): string {
     return implementation._getInternalUrl(globalSettingsProperty, null, 0);
 };
+
+/**
+ * Returns the list of Kong plugins which the Kong Adapter will not touch.
+ */
+export function getKongAdapterIgnoreList(): string[] {
+    return implementation._getKongAdapterIgnoreList();
+}
+
+/**
+ * Returns the header name to use for key auth purposes. Defaults to `X-ApiKey`.
+ */
+export function getApiKeyHeader(): string {
+    return implementation._getApiKeyHeader();
+}
 
 // ======= API FUNCTIONALITY =======
 

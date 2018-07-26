@@ -535,6 +535,29 @@ export function _getInternalUrl(globalSettingsProperty: string, defaultHost: str
     throw new Error('Configuration property "' + globalSettingsProperty + '" not defined in globals.json: network.');
 }
 
+/** @hidden */
+export function _getKongAdapterIgnoreList(): string[] {
+    debug('getKongAdapterIgnoreList()');
+    checkInitialized('getKongAdapterIgnoreList');
+
+    const glob = wickedStorage.globals as WickedGlobals;
+    if (glob.kongAdapter && glob.kongAdapter.useKongAdapter && glob.kongAdapter.ignoreList) {
+        return glob.kongAdapter.ignoreList;
+    }
+    return [];
+}
+
+/** @hidden */
+export function _getApiKeyHeader(): string {
+    debug('getApiKeyHeader()');
+    checkInitialized('getApiKeyHeader');
+
+    const glob = wickedStorage.globals as WickedGlobals;
+    if (glob.api && glob.api.headerName)
+        return glob.api.headerName;
+    return 'X-ApiKey';
+}
+
 // ======= UTILITY FUNCTIONS ======
 
 /** @hidden */

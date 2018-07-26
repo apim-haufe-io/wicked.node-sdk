@@ -416,7 +416,8 @@ export interface WickedPoolMap {
 export interface WickedRegistration {
     userId: string,
     poolId: string,
-    namespace?: string
+    namespace?: string,
+    [key: string]: any
 }
 
 export interface WickedRegistrationMap {
