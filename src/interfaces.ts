@@ -259,14 +259,12 @@ export interface WickedApiCollection {
 }
 
 export interface WickedApiSettings {
-    hide_credentials?: boolean,
     enable_client_credentials?: boolean,
     enable_implicit_grant?: boolean,
     enable_authorization_code?: boolean,
     enable_password_grant?: boolean,
     mandatory_scope?: boolean,
     accept_http_if_terminated?: boolean,
-    hide_credentials?: boolean,
     token_expiration?: string,
     scopes: WickedApiScopes,
     tags: string[],
