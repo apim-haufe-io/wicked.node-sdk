@@ -356,3 +356,8 @@ export interface KongStatus {
         connections_waiting: number
     }
 }
+
+export interface KongApiConfig {
+    api: KongApi,
+    plugins: KongPlugin[]
+}

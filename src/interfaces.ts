@@ -1,6 +1,6 @@
 'use strict';
 
-import { KongPlugin, KongApi } from "./kong-interfaces";
+import { KongPlugin, KongApi, KongApiConfig } from "./kong-interfaces";
 
 
 // ====================
@@ -317,10 +317,7 @@ export interface WickedAuthServer {
     id: string,
     name: string,
     authMethods: WickedAuthMethod[],
-    config: {
-        api: KongApi,
-        plugins: KongPlugin[]
-    }
+    config: KongApiConfig
 }
 
 export enum WickedOwnerRole {
