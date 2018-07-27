@@ -1,6 +1,6 @@
 'use strict';
 
-import { KongService, KongRoute, KongApi, ProtocolType } from "./interfaces";
+import { KongService, KongRoute, KongApi, ProtocolType } from "./kong-interfaces";
 
 /** @hidden */
 function deducePort(url: URL): number {
