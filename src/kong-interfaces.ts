@@ -197,6 +197,16 @@ export interface KongPluginCorrelationId extends KongPlugin {
     }
 }
 
+export interface KongPluginHmacAuth extends KongPlugin {
+    hide_credentials?: boolean,
+    clock_skew?: number,
+    anonymous?: string,
+    validate_request_body?: boolean,
+    enforce_headers?: string[],
+    algorithms: string[]
+}
+
+
 export interface KongCollection<T> {
     total: number,
     data: T[],
@@ -359,5 +369,5 @@ export interface KongStatus {
 
 export interface KongApiConfig {
     api: KongApi,
-    plugins: KongPlugin[]
+    plugins?: KongPlugin[]
 }
