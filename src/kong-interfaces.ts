@@ -208,7 +208,8 @@ export interface KongPluginHmacAuth extends KongPlugin {
 
 
 export interface KongCollection<T> {
-    total: number,
+    // This property is not always present, take it out, use data.length
+    // total: number,
     data: T[],
     next?: string
 }
