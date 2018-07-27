@@ -4,6 +4,8 @@
 
 **IMPORTANT**: This is the documentation of the wicked.haufe.io node SDK as of version 1.0.0! It will **NOT** work with previous versions of wicked.haufe.io.
 
+Full documentation at [apim-haufe-io.github.com/wicked.node-sdk](https://apim-haufe-io.github.io/wicked.node-sdk/).
+
 ## Introduction
 
 This node.js module is an SDK for building plugins and additions to the wicked.haufe.io API Management system.
