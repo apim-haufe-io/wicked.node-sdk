@@ -256,6 +256,7 @@ export interface WickedApiCollection {
 }
 
 export interface WickedApiSettings {
+    hide_credentials?: boolean,
     enable_client_credentials?: boolean,
     enable_implicit_grant?: boolean,
     enable_authorization_code?: boolean,
