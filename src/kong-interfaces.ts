@@ -15,6 +15,7 @@ export interface KongApi {
     preserve_host?: boolean,
     retries?: number,
     strip_uri?: boolean,
+    hide_credentials?: boolean,
     upstream_connect_timeout?: number,
     upstream_read_timeout?: number,
     upstream_send_timeout?: number,

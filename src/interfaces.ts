@@ -247,6 +247,7 @@ export interface WickedApi {
     authMethods?: string[],
     registrationPool?: string,
     requiredGroup?: string,
+    hide_credentials?: boolean,
     passthroughUsers?: boolean,
     passthroughScopeUrl?: string,
     settings: WickedApiSettings,
