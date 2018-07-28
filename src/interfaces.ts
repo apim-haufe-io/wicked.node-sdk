@@ -368,13 +368,13 @@ export interface WickedSubscriptionCreateInfo {
     plan: string,
     auth: WickedAuthType,
     apikey?: string,
+    trusted?: boolean,
 }
 
 export interface WickedSubscription extends WickedSubscriptionCreateInfo {
     clientId?: string,
     clientSecret?: string,
     approved: boolean,
-    trusted?: boolean,
     changedBy?: string,
     changedDate?: string
 }
