@@ -37,22 +37,25 @@ echo "INFO: Package file: ${packageFile}"
 
 pushd .. > /dev/null
 
+baseDir=$(pwd)
+
 # Leaving out: wicked.portal-kong-oauth2 - that repository
 # will be rationalized away, it's getting too complicated
 for dir in wicked.portal \
     wicked.portal-mailer \
     wicked.portal-chatbot \
     wicked.portal-auth \
-    wicked.portal-kong-adapter; do
+    wicked.portal-kong-adapter \
+    wicked.portal-test/portal-auth; do
 
     echo "INFO: Installing node-sdk into $dir"
 
     pushd $dir > /dev/null
-    cp -f ../wicked.node-sdk/${packageFile} ./wicked-sdk.tgz
+    cp -f ${baseDir}/wicked.node-sdk/${packageFile} ./wicked-sdk.tgz
     if [ "$1" = "--copy" ]; then
         echo "INFO: Just copying node-sdk, npm install has to be run later."
     else
-        npm install wicked-sdk.tgz >> ../wicked.node-sdk/install-local-sdk.log 2>&1
+        npm install wicked-sdk.tgz >> ${baseDir}/wicked.node-sdk/install-local-sdk.log 2>&1
     fi
     popd > /dev/null
 done

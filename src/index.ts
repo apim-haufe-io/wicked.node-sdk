@@ -464,6 +464,21 @@ export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: str
 }
 
 /**
+ * Deletes a user. This function will only succeed if the user does not have any associated applications.
+ * If the user has applications, these have to be deleted or re-owned first.
+ * 
+ * @param userId ID of user to delete
+ * @param callback 
+ */
+export function deleteUser(userId: string, callback: ErrorCallback): void {
+    deleteUserAs(userId, null, callback);
+}
+
+export function deleteUserAs(userId: string, asUserId: string, callback: ErrorCallback) {
+    apiDelete(`users/${userId}`, asUserId, callback);
+}
+
+/**
  * Retrieves user information for a specific user.
  * 
  * @param userId ID of user to retrieve
