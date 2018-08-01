@@ -19,9 +19,9 @@ const isLinux = (os.platform() === 'linux');
 /** @hidden */
 const isContainerized = isLinux && containerized();
 
-const WICKED_TIMEOUT = 2000; // request timeout for wicked API operations
+const WICKED_TIMEOUT = 10000; // request timeout for wicked API operations
 // const KONG_TIMEOUT = 5000; // request timeout for kong admin API operations
-const TRYGET_TIMEOUT = 2000; // request timeout for single calls in awaitUrl
+const TRYGET_TIMEOUT = 5000; // request timeout for single calls in awaitUrl
 
 // ====== VARIABLES ======
 
