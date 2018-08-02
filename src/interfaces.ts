@@ -213,9 +213,18 @@ export interface WickedUserShortInfo {
 }
 
 export interface WickedUserCreateInfo {
+    /** Specify the id of the user in case you are importing from a different system and
+     * want to re-use the user IDs (for whatever reason).
+     */
+    id?: string,
     customId?: string,
     email: string,
     password?: string,
+    /** Pass "true" if you are creating the user with a pre-hashed password; supported hashing mechanisms are:
+     * - `bcrypt(password)`
+     * - `bcrypt(SHA256(password))`
+     */
+    passwordIsHashed?: boolean,
     validated?: boolean,
     groups: string[]
 }
