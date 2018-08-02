@@ -139,6 +139,13 @@ export function getPortalApiScope(): string {
 };
 
 /**
+ * Returns the full URL to the portal UI instance, e.g. `http://portal:3000`, as seen from inside the deployment.
+ */
+export function getInternalPortalUrl(): string {
+    return implementation._getInternalPortalUrl();
+}
+
+/**
  * Returns the full URL to the admin port of the Kong instance(s), as seen from inside the deployment. E.g., `http://kong:8000`.
  */
 export function getInternalKongAdminUrl(): string {

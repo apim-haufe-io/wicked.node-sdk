@@ -482,6 +482,14 @@ export function _getPortalApiScope() {
 }
 
 /** @hidden */
+export function _getInternalPortalUrl() {
+    debug('getInternalPortalUrl()');
+    checkInitialized('getInternalPortalUrl');
+
+    return _getInternalUrl('portalUrl', 'portal', 3000);
+}
+
+/** @hidden */
 export function _getInternalKongAdminUrl() {
     debug('getInternalKongAdminUrl()');
     checkInitialized('getInternalKongAdminUrl');
