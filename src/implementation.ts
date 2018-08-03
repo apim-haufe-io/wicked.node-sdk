@@ -42,6 +42,7 @@ export const wickedStorage = {
     userAgent: null,
     pendingExit: false,
     apiReachable: false,
+    isPollingApi: false,
     // This field will not necessarily be filled.
     apiVersion: null,
     isV012OrHigher: false,
@@ -158,6 +159,7 @@ export function _initialize(options: WickedInitOptions, callback: Callback<Wicke
 
                 // Success, set up config hash checker loop (if not switched off)
                 if (!options.doNotPollConfigHash) {
+                    wickedStorage.isPollingApi = true;
                     setInterval(checkConfigHash, 10000);
                 }
 
@@ -245,6 +247,14 @@ export function checkConfigHash() {
 export function forceExit() {
     console.log('Exiting component due to outdated configuration (confighash mismatch).');
     process.exit(0);
+}
+
+/** @hidden */
+export function _isApiReachable() {
+    checkInitialized('isApiReachable');
+    if (!wickedStorage.isPollingApi)
+        throw new Error('isApiReachable() can only be used if wicked-sdk is polling the API continuously (option "doNotPollConfigHash").')
+    return wickedStorage.apiReachable;
 }
 
 /** @hidden */

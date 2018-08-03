@@ -30,6 +30,13 @@ export function initialize(options: WickedInitOptions, callback: Callback<Wicked
 }
 
 /**
+ * Returns true if the wicked SDK is currently able to reach the wicked API.
+ */
+export function isApiReachable(): boolean {
+    return implementation._isApiReachable();
+}
+
+/**
  * Returns true if the system is in "development mode". This usually means that transport is not secure
  * (not via https).
  */

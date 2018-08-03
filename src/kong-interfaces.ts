@@ -151,10 +151,6 @@ export interface KongPluginOAuth2 extends KongPlugin {
 export interface KongPluginRateLimiting extends KongPlugin {
     config: {
         fault_tolerant?: boolean,
-        redis_database?: number,
-        policy?: string,
-        redis_port?: number,
-        redis_timeout?: number,
         hide_client_headers?: boolean,
         limit_by?: string,
         second?: number,
@@ -162,7 +158,13 @@ export interface KongPluginRateLimiting extends KongPlugin {
         hour?: number,
         day?: number,
         month?: number,
-        year?: number
+        year?: number,
+        policy?: string,
+        redis_host?: string,
+        redis_database?: number,
+        redis_port?: number,
+        redis_password?: string,
+        redis_timeout?: number
     }    
 }
 
