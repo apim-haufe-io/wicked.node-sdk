@@ -514,7 +514,7 @@ export function _getInternalKongProxyUrl() {
 
     // Deduce from Kong Admin URL
     const adminUrl = _getInternalKongAdminUrl();
-    return adminUrl.replace(/8001/g, '8000');
+    return adminUrl.replace(/8001/, '8000');
 }
 
 /** @hidden */
