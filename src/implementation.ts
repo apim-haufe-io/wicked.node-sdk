@@ -508,6 +508,16 @@ export function _getInternalKongAdminUrl() {
 }
 
 /** @hidden */
+export function _getInternalKongProxyUrl() {
+    debug('getInternalKongAdminUrl()');
+    checkInitialized('getInternalKongAdminUrl');
+
+    // Deduce from Kong Admin URL
+    const adminUrl = _getInternalKongAdminUrl();
+    return adminUrl.replace(/8001/g, '8000');
+}
+
+/** @hidden */
 export function _getInternalMailerUrl() {
     debug('getInternalMailerUrl');
     checkInitialized('getInternalMailerUrl');

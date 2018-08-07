@@ -153,10 +153,17 @@ export function getInternalPortalUrl(): string {
 }
 
 /**
- * Returns the full URL to the admin port of the Kong instance(s), as seen from inside the deployment. E.g., `http://kong:8000`.
+ * Returns the full URL to the admin port of the Kong instance(s), as seen from inside the deployment. E.g., `http://kong:8001`.
  */
 export function getInternalKongAdminUrl(): string {
     return implementation._getInternalKongAdminUrl();
+};
+
+/**
+ * Returns the full URL to the proxy port of the Kong instance(s), as seen from inside the deployment. E.g., `http://kong:8000`.
+ */
+export function getInternalKongProxyUrl(): string {
+    return implementation._getInternalKongProxyUrl();
 };
 
 /**
