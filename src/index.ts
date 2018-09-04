@@ -485,6 +485,20 @@ export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: str
 }
 
 /**
+ * Patches a user. Returns the updated user information.
+ * 
+ * @param userPatchInfo The information of the user to update (password, groups...)
+ * @param callback
+ */
+export function patchUser(userId: string, userPatchInfo: WickedUserCreateInfo, callback: Callback<WickedUserInfo>): void {
+    patchUserAs(userId, userPatchInfo, null, callback);
+}
+
+export function patchUserAs(userId: string, userPatchInfo: WickedUserCreateInfo, asUserId: string, callback: Callback<WickedUserInfo>): void {
+    apiPatch(`users/${userId}`, userPatchInfo, asUserId, callback);
+}
+
+/**
  * Deletes a user. This function will only succeed if the user does not have any associated applications.
  * If the user has applications, these have to be deleted or re-owned first.
  * 
