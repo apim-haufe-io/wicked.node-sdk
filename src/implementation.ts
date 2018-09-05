@@ -819,7 +819,9 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
     // run on an outdated configuration.
     reqInfo.headers = { 'X-Config-Hash': wickedStorage.configHash };
     if (userId) {
-        if (wickedStorage.isV012OrHigher) {
+        if (wickedStorage.isV100OrHigher) {
+            reqInfo.headers['X-Authenticated-UserId'] = `sub=userId`;
+        } else if (wickedStorage.isV012OrHigher) {
             reqInfo.headers['X-Authenticated-UserId'] = userId;
         } else {
             reqInfo.headers['X-UserId'] = userId;
