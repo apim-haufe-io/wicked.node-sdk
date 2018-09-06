@@ -73,7 +73,9 @@ export interface KongPluginCors extends KongPlugin {
     config: {
         credentials?: boolean,
         origins: string[],
-        preflight_continue?: boolean
+        preflight_continue?: boolean,
+        // Can be comma-separated string or string[]
+        methods?: any
     }
 }
 
