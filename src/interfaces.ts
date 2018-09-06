@@ -252,6 +252,7 @@ export interface WickedApi {
     name: string,
     desc: string,
     auth: string,
+    bundle?: string,
     tags?: string[],
     authMethods?: string[],
     registrationPool?: string,
