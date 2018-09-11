@@ -43,7 +43,9 @@ const wicked = require('wicked-sdk');
 
 const wickedOptions = {
     userAgentName: 'your-component',
-    userAgentVersion: '1.0.0'
+    userAgentVersion: '1.0.0',
+    apiMaxTries: 10, // optional, defaults to 10
+    apiRetryDelay: 500, // optional, defaults to 500
 };
 
 // Init wicked SDK and register a machine user.

@@ -3,6 +3,8 @@
 import { WickedInitOptions, Callback, WickedGlobals, WickedGetOptions, WickedGetCollectionOptions, WickedAwaitOptions, WickedUserInfo, ErrorCallback, WickedSubscriptionInfo } from "./interfaces";
 import { WickedError } from "./wicked-error";
 
+import * as async from 'async';
+
 /** @hidden */
 const os = require('os');
 /** @hidden */
@@ -47,7 +49,9 @@ export const wickedStorage = {
     apiVersion: null,
     isV012OrHigher: false,
     isV100OrHigher: false,
-    portalApiScope: null
+    portalApiScope: null,
+    apiMaxTries: 10,
+    apiRetryDelay: 500
 };
 
 // ====================
@@ -78,6 +82,11 @@ export function _initialize(options: WickedInitOptions, callback: Callback<Wicke
     if (options) {
         debug('options:');
         debug(options);
+
+        if (options.apiMaxTries) {
+            wickedStorage.apiMaxTries = options.apiMaxTries;
+            wickedStorage.apiRetryDelay = options.apiRetryDelay;
+        }
     }
 
     const validationError = validateOptions(options);
@@ -839,31 +848,49 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
         reqInfo.headers['User-Agent'] = wickedStorage.userAgent;
     }
 
-    request(reqInfo, function (err, res, body) {
-        if (err)
-            return callback(err);
-        if (res.statusCode > 299) {
-            // Looks bad
-            const err = new WickedError('api' + nice(method) + '() ' + urlPath + ' returned non-OK status code: ' + res.statusCode + ', check err.statusCode and err.body for details', res.statusCode, body);
-            return callback(err);
-        }
-        if (res.statusCode !== 204) {
-            const contentType = res.headers['content-type'];
-            let returnValue = null;
-            try {
-                if (contentType.startsWith('text'))
-                    returnValue = getText(body);
-                else
-                    returnValue = getJson(body);
-            } catch (ex) {
-                return callback(new Error('api' + nice(method) + '() ' + urlPath + ' returned non-parseable JSON: ' + ex.message));
+    async.retry({
+        tries: wickedStorage.apiMaxTries,
+        interval: wickedStorage.apiRetryDelay,
+        errorFilter: function (err) {
+            // Errors which are not "hard" but have an error code are permanent if they have a non-5xx error code.
+            if (err.statusCode) {
+                // In that case, abort the retry flow
+                if (err.statusCode < 500)
+                    return false;
+                // Retry on 5xx
+                return true;
             }
-            return callback(null, returnValue);
-        } else {
-            // Empty response
-            return callback(null);
+            // In case of hard errors (such es E_CONN_xxx), continue retrying
+            return true;
         }
-    });
+    }, function (callback) {
+        debug(`Attempting to ${reqInfo.method} ${reqInfo.url}`);
+        request(reqInfo, function (err, res, body) {
+            if (err)
+                return callback(err);
+            if (res.statusCode > 299) {
+                // Looks bad
+                const err = new WickedError(`api${nice(method)}() ${urlPath} returned non-OK status code: ${res.statusCode}, check err.statusCode and err.body for details`, res.statusCode, body);
+                return callback(err);
+            }
+            if (res.statusCode !== 204) {
+                const contentType = res.headers['content-type'];
+                let returnValue = null;
+                try {
+                    if (contentType.startsWith('text'))
+                        returnValue = getText(body);
+                    else
+                        returnValue = getJson(body);
+                } catch (ex) {
+                    return callback(new WickedError(`api${nice(method)}() ${urlPath} returned non-parseable JSON: ${ex.message}`, 500, body));
+                }
+                return callback(null, returnValue);
+            } else {
+                // Empty response
+                return callback(null);
+            }
+        });
+    }, callback);
 }
 
 /** @hidden */

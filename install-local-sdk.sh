@@ -39,14 +39,13 @@ pushd .. > /dev/null
 
 baseDir=$(pwd)
 
-# Leaving out: wicked.portal-kong-oauth2 - that repository
-# will be rationalized away, it's getting too complicated
 for dir in wicked.portal \
     wicked.portal-mailer \
     wicked.portal-chatbot \
     wicked.portal-auth \
     wicked.portal-kong-adapter \
-    wicked.portal-test/portal-auth; do
+    wicked.portal-test/portal-auth \
+    wicked.k8s-init; do
 
     echo "INFO: Installing node-sdk into $dir"
 

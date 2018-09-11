@@ -28,7 +28,11 @@ export interface WickedInitOptions extends WickedAwaitOptions {
     /** The version of your user agent. */
     userAgentVersion: string,
     /** Defaults to `false`; if `false`, the wicked SDK will poll the `/confighash` end point of the wicked API to check for updated static configuration; if such is detected, the SDK will force quit the component to make the assumed orchestrator restart it. */
-    doNotPollConfigHash?: boolean
+    doNotPollConfigHash?: boolean,
+    /** Retries before failing: The number of retries the SDK does before failing when accessing the wicked API. Defaults to 10. */
+    apiMaxTries?: number,
+    /** Retry interval in ms; if an API call is failing, the SDK will retry after a certain amount of time again. Defaults to 500ms. */
+    apiRetryDelay?: number
 }
 
 export interface WickedGlobals {
