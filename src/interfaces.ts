@@ -40,6 +40,8 @@ export interface WickedGlobals {
     version: number,
     title: string,
     footer: string,
+    /** Selected password strategy identifier; use wicked SDK to get a list of supported strategies */
+    passwordStrategy: string,
     company: string,
     /** Group validated users are automatically assigned to */
     validatedUsergGroup?: string,
@@ -59,7 +61,16 @@ export interface WickedGlobals {
     mailer: WickedMailerConfig
     chatbot: WickedChatbotConfig,
     layouts?: WickedLayoutConfig
-    views?: WickedViewsConfig
+    views?: WickedViewsConfig,
+}
+
+export interface WickedPasswordStrategy {
+    /** Identifier of the strategy */
+    strategy: string,
+    /** Description of the strategy */
+    description: string,
+    /** Regex stirng of the password strategy, for use with `new RegExp()` */
+    regex: string
 }
 
 export interface WickedStorageConfig {
@@ -229,6 +240,8 @@ export interface WickedUserCreateInfo {
      * - `bcrypt(SHA256(password))`
      */
     passwordIsHashed?: boolean,
+    /** Pass "true" if the user must change the password when logging in the first time. */
+    mustChangePassword?: boolean,
     validated?: boolean,
     groups: string[]
 }

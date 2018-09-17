@@ -595,6 +595,16 @@ export function _getApiKeyHeader(): string {
     return 'X-ApiKey';
 }
 
+/** @hidden */
+export function _getPasswordStrategy(): string {
+    debug('getPasswordStrategy()');
+    checkInitialized('getPasswordStrategy()');
+    const glob = wickedStorage.globals as WickedGlobals;
+    if (glob.passwordStrategy)
+        return glob.passwordStrategy;
+    return 'PW_6_24';
+}
+
 // ======= UTILITY FUNCTIONS ======
 
 /** @hidden */
