@@ -96,7 +96,9 @@
 
 <span class="hljs-keyword">const</span> wickedOptions = {
     <span class="hljs-attr">userAgentName</span>: <span class="hljs-string">'your-component'</span>,
-    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">'1.0.0'</span>
+    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">'1.0.0'</span>,
+    <span class="hljs-attr">apiMaxTries</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// optional, defaults to 10</span>
+    apiRetryDelay: <span class="hljs-number">500</span>, <span class="hljs-comment">// optional, defaults to 500</span>
 };
 
 <span class="hljs-comment">// Init wicked SDK and register a machine user.</span>

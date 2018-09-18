@@ -96,6 +96,8 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedinitoptions.html#apimaxtries" class="tsd-kind-icon">api<wbr>Max<wbr>Tries</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedinitoptions.html#apiretrydelay" class="tsd-kind-icon">api<wbr>Retry<wbr>Delay</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedinitoptions.html#donotpollconfighash" class="tsd-kind-icon">do<wbr>Not<wbr>Poll<wbr>Config<wbr>Hash</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_interfaces_.wickedinitoptions.html#maxtries" class="tsd-kind-icon">max<wbr>Tries</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="_interfaces_.wickedinitoptions.html#retrydelay" class="tsd-kind-icon">retry<wbr>Delay</a></li>
@@ -110,12 +112,42 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="apimaxtries" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> api<wbr>Max<wbr>Tries</h3>
+					<div class="tsd-signature tsd-kind-icon">api<wbr>Max<wbr>Tries<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L33">interfaces.ts:33</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Retries before failing: The number of retries the SDK does before failing when accessing the wicked API. Defaults to 10.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="apiretrydelay" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> api<wbr>Retry<wbr>Delay</h3>
+					<div class="tsd-signature tsd-kind-icon">api<wbr>Retry<wbr>Delay<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L35">interfaces.ts:35</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Retry interval in ms; if an API call is failing, the SDK will retry after a certain amount of time again. Defaults to 500ms.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="donotpollconfighash" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagOptional">Optional</span> do<wbr>Not<wbr>Poll<wbr>Config<wbr>Hash</h3>
 					<div class="tsd-signature tsd-kind-icon">do<wbr>Not<wbr>Poll<wbr>Config<wbr>Hash<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/d8aa52b/src/interfaces.ts#L31">interfaces.ts:31</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L31">interfaces.ts:31</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -131,7 +163,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_interfaces_.wickedawaitoptions.html">WickedAwaitOptions</a>.<a href="_interfaces_.wickedawaitoptions.html#maxtries">maxTries</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/d8aa52b/src/interfaces.ts#L17">interfaces.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L17">interfaces.ts:17</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -147,7 +179,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_interfaces_.wickedawaitoptions.html">WickedAwaitOptions</a>.<a href="_interfaces_.wickedawaitoptions.html#retrydelay">retryDelay</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/d8aa52b/src/interfaces.ts#L19">interfaces.ts:19</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L19">interfaces.ts:19</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -163,7 +195,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_interfaces_.wickedawaitoptions.html">WickedAwaitOptions</a>.<a href="_interfaces_.wickedawaitoptions.html#statuscode">statusCode</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/d8aa52b/src/interfaces.ts#L15">interfaces.ts:15</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L15">interfaces.ts:15</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -178,7 +210,7 @@
 					<div class="tsd-signature tsd-kind-icon">user<wbr>Agent<wbr>Name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/d8aa52b/src/interfaces.ts#L27">interfaces.ts:27</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L27">interfaces.ts:27</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -193,7 +225,7 @@
 					<div class="tsd-signature tsd-kind-icon">user<wbr>Agent<wbr>Version<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/d8aa52b/src/interfaces.ts#L29">interfaces.ts:29</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/92b6115/src/interfaces.ts#L29">interfaces.ts:29</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -237,6 +269,12 @@
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
 						<a href="_interfaces_.wickedinitoptions.html" class="tsd-kind-icon">Wicked<wbr>Init<wbr>Options</a>
 						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_interfaces_.wickedinitoptions.html#apimaxtries" class="tsd-kind-icon">api<wbr>Max<wbr>Tries</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_interfaces_.wickedinitoptions.html#apiretrydelay" class="tsd-kind-icon">api<wbr>Retry<wbr>Delay</a>
+							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="_interfaces_.wickedinitoptions.html#donotpollconfighash" class="tsd-kind-icon">do<wbr>Not<wbr>Poll<wbr>Config<wbr>Hash</a>
 							</li>
