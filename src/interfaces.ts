@@ -191,7 +191,11 @@ export interface WickedRecaptchaConfig {
 }
 
 export interface WickedGlobalsApi {
-    headerName: string
+    headerName: string,
+    /** Required user group for subscribing to the portal-api internal API */
+    apiUserGroup?: string,
+    /** Required user group for subscribing to the echo internal API */
+    echoUserGroup?: string
 }
 
 export interface WickedGlobalsNetwork {
