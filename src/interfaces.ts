@@ -298,6 +298,7 @@ export interface WickedApiSettings {
     mandatory_scope?: boolean,
     accept_http_if_terminated?: boolean,
     token_expiration?: string,
+    refresh_token_ttl?: string,
     scopes: WickedApiScopes,
     tags: string[],
     plans: string[],

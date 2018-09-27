@@ -524,7 +524,7 @@ export function _getInternalKongProxyUrl() {
     // Check if it's there
     try {
         const proxyUrl = _getInternalUrl('kongProxyUrl', 'kong', 8000);
-        if (proxyUrl)
+        if (proxyUrl && proxyUrl !== '' && proxyUrl !== '/')
             return proxyUrl;
     } catch (ex) {
         debug(ex);
