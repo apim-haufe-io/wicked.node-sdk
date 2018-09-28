@@ -6,6 +6,9 @@
         "types": [
             "node"
         ],
+        "lib": [
+            "es6"
+        ],
         "outDir": "./dist",
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
