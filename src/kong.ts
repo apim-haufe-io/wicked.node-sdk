@@ -1,5 +1,6 @@
 'use strict';
 
+import { URL } from "url";
 import { KongService, KongRoute, KongApi, ProtocolType } from "./kong-interfaces";
 
 /** @hidden */
