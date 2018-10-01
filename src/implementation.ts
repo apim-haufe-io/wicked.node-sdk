@@ -521,13 +521,16 @@ export function _getInternalKongProxyUrl() {
     debug('getInternalKongProxyUrl()');
     checkInitialized('getInternalKongProxyUrl');
 
-    // Check if it's there
-    try {
-        const proxyUrl = _getInternalUrl('kongProxyUrl', 'kong', 8000);
-        if (proxyUrl && proxyUrl !== '' && proxyUrl !== '/')
-            return proxyUrl;
-    } catch (ex) {
-        debug(ex);
+    // Check if it's there, but only if the property is present
+    if (wickedStorage.globals.network && 
+        wickedStorage.globals.network.kongProxyUrl) {
+        try {
+            const proxyUrl = _getInternalUrl('kongProxyUrl', 'kong', 8000);
+            if (proxyUrl && proxyUrl !== '' && proxyUrl !== '/')
+                return proxyUrl;
+        } catch (ex) {
+            debug(ex);
+        }
     }
     debug(`globals.json: network.kongProxyUrl is not defined, falling back to admin URL.`)
     // Fallback: Deduce from Kong Admin URL
