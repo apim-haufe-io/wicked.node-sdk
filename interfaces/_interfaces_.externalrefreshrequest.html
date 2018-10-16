@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>WickedApproval | wicked-sdk</title>
+	<title>ExternalRefreshRequest | wicked-sdk</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,21 +59,29 @@
 					<a href="../modules/_interfaces_.html">&quot;interfaces&quot;</a>
 				</li>
 				<li>
-					<a href="_interfaces_.wickedapproval.html">WickedApproval</a>
+					<a href="_interfaces_.externalrefreshrequest.html">ExternalRefreshRequest</a>
 				</li>
 			</ul>
-			<h1>Interface WickedApproval</h1>
+			<h1>Interface ExternalRefreshRequest</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>For auth methods using the ”external&quot; type, this is the payload of requests which are sent to
+						the backend prior to allowing access tokens to be refreshed.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">WickedApproval</span>
+						<span class="target">ExternalRefreshRequest</span>
 					</li>
 				</ul>
 			</section>
@@ -84,11 +92,8 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedapproval.html#api" class="tsd-kind-icon">api</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedapproval.html#application" class="tsd-kind-icon">application</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedapproval.html#id-2" class="tsd-kind-icon">id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedapproval.html#plan" class="tsd-kind-icon">plan</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.wickedapproval.html#user" class="tsd-kind-icon">user</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.externalrefreshrequest.html#authenticated_scope" class="tsd-kind-icon">authenticated_<wbr>scope</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.externalrefreshrequest.html#authenticated_userid" class="tsd-kind-icon">authenticated_<wbr>userid</a></li>
 							</ul>
 						</section>
 					</div>
@@ -97,100 +102,38 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="api" class="tsd-anchor"></a>
-					<h3>api</h3>
-					<div class="tsd-signature tsd-kind-icon">api<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<a name="authenticated_scope" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> authenticated_<wbr>scope</h3>
+					<div class="tsd-signature tsd-kind-icon">authenticated_<wbr>scope<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L489">interfaces.ts:489</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L763">interfaces.ts:763</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-						</ul>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>This is just for information the scope for which the initial access token was created.
+							Refreshed tokens are created with the same scope, and cannot be changed here.</p>
+						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="application" class="tsd-anchor"></a>
-					<h3>application</h3>
-					<div class="tsd-signature tsd-kind-icon">application<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
+					<a name="authenticated_userid" class="tsd-anchor"></a>
+					<h3>authenticated_<wbr>userid</h3>
+					<div class="tsd-signature tsd-kind-icon">authenticated_<wbr>userid<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L493">interfaces.ts:493</a></li>
+							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L758">interfaces.ts:758</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-						</ul>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="id-2" class="tsd-anchor"></a>
-					<h3>id</h3>
-					<div class="tsd-signature tsd-kind-icon">id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L483">interfaces.ts:483</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="plan" class="tsd-anchor"></a>
-					<h3>plan</h3>
-					<div class="tsd-signature tsd-kind-icon">plan<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L497">interfaces.ts:497</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-						</ul>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="user" class="tsd-anchor"></a>
-					<h3>user</h3>
-					<div class="tsd-signature tsd-kind-icon">user<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L484">interfaces.ts:484</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>email<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
-							</li>
-						</ul>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The authenticated user ID of the user requesting a refreshed token; depending on whether
+								the API uses passthrough users or wicked backed users, this is either the value
+								from the the @ExternalUserPassResponse as <code>sub=&lt;sub value from profile&gt; (when using
+passthrough users), or a field containing</code>sub=<wicked user id>` (when using wicked backed
+							users).</p>
+						</div>
 					</div>
 				</section>
 			</section>
@@ -226,22 +169,13 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_interfaces_.wickedapproval.html" class="tsd-kind-icon">Wicked<wbr>Approval</a>
+						<a href="_interfaces_.externalrefreshrequest.html" class="tsd-kind-icon">External<wbr>Refresh<wbr>Request</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.wickedapproval.html#api" class="tsd-kind-icon">api</a>
+								<a href="_interfaces_.externalrefreshrequest.html#authenticated_scope" class="tsd-kind-icon">authenticated_<wbr>scope</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.wickedapproval.html#application" class="tsd-kind-icon">application</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.wickedapproval.html#id-2" class="tsd-kind-icon">id</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.wickedapproval.html#plan" class="tsd-kind-icon">plan</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.wickedapproval.html#user" class="tsd-kind-icon">user</a>
+								<a href="_interfaces_.externalrefreshrequest.html#authenticated_userid" class="tsd-kind-icon">authenticated_<wbr>userid</a>
 							</li>
 						</ul>
 					</li>
