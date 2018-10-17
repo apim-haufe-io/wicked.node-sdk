@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>ExternalRefreshResponse | wicked-sdk</title>
+	<title>ScopeLookupResponse | wicked-sdk</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/_interfaces_.html">&quot;interfaces&quot;</a>
 				</li>
 				<li>
-					<a href="_interfaces_.externalrefreshresponse.html">ExternalRefreshResponse</a>
+					<a href="_interfaces_.scopelookupresponse.html">ScopeLookupResponse</a>
 				</li>
 			</ul>
-			<h1>Interface ExternalRefreshResponse</h1>
+			<h1>Interface ScopeLookupResponse</h1>
 		</div>
 	</div>
 </header>
@@ -72,83 +72,55 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Expected response (as JSON) of an ExternalRefreshRequest. Contains information on whether
-						the refresh request shall be allowed or not.</p>
+						<p>Interface describing the expected response of a scope lookup request from the portal API, if this
+							property is set on a specific API. When doing a GET on the specified endpoint, this is the format
+						of the data which has to be returned.</p>
 					</div>
+					<p>Example:</p>
+					<pre><code>{
+   <span class="hljs-attr">"scope1"</span>: {
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"This is scope 1"</span>
+   },
+   <span class="hljs-attr">"scope2"</span>: {
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"This is another scope"</span>
+   }
+}
+</code></pre>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">ExternalRefreshResponse</span>
+						<span class="target">ScopeLookupResponse</span>
 					</li>
 				</ul>
 			</section>
-			<section class="tsd-panel-group tsd-index-group">
-				<h2>Index</h2>
-				<section class="tsd-panel tsd-index-panel">
-					<div class="tsd-index-content">
-						<section class="tsd-index-section ">
-							<h3>Properties</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.externalrefreshresponse.html#allow_refresh" class="tsd-kind-icon">allow_<wbr>refresh</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.externalrefreshresponse.html#error" class="tsd-kind-icon">error</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_interfaces_.externalrefreshresponse.html#error_description" class="tsd-kind-icon">error_<wbr>description</a></li>
-							</ul>
-						</section>
+			<section class="tsd-panel tsd-kind-interface tsd-parent-kind-external-module">
+				<h3 class="tsd-before-signature">Indexable</h3>
+				<div class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">[</span>scope: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">object</span></div>
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Interface describing the expected response of a scope lookup request from the portal API, if this
+							property is set on a specific API. When doing a GET on the specified endpoint, this is the format
+						of the data which has to be returned.</p>
 					</div>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="allow_refresh" class="tsd-anchor"></a>
-					<h3>allow_<wbr>refresh</h3>
-					<div class="tsd-signature tsd-kind-icon">allow_<wbr>refresh<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L796">interfaces.ts:796</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Return true to allow refresh, otherwise false.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="error" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> error</h3>
-					<div class="tsd-signature tsd-kind-icon">error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L801">interfaces.ts:801</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Optional error message if allow_refresh is returned as false. This string may be used
-							in end-user facing communication.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="error_description" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> error_<wbr>description</h3>
-					<div class="tsd-signature tsd-kind-icon">error_<wbr>description<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/Haufe-Lexware/wicked.node-sdk/blob/9060e96/src/interfaces.ts#L806">interfaces.ts:806</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Optional longer error description in case allow_refresh is returned as false.
-							This string may be used in end-user facing communication.</p>
-						</div>
-					</div>
-				</section>
+					<p>Example:</p>
+					<pre><code>{
+   <span class="hljs-attr">"scope1"</span>: {
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"This is scope 1"</span>
+   },
+   <span class="hljs-attr">"scope2"</span>: {
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"This is another scope"</span>
+   }
+}
+</code></pre>
+				</div>
+				<ul class="tsd-parameters">
+					<li class="tsd-parameter">
+						<h5>description<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+					</li>
+				</ul>
 			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -182,18 +154,7 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="_interfaces_.externalrefreshresponse.html" class="tsd-kind-icon">External<wbr>Refresh<wbr>Response</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.externalrefreshresponse.html#allow_refresh" class="tsd-kind-icon">allow_<wbr>refresh</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.externalrefreshresponse.html#error" class="tsd-kind-icon">error</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_interfaces_.externalrefreshresponse.html#error_description" class="tsd-kind-icon">error_<wbr>description</a>
-							</li>
-						</ul>
+						<a href="_interfaces_.scopelookupresponse.html" class="tsd-kind-icon">Scope<wbr>Lookup<wbr>Response</a>
 					</li>
 				</ul>
 				<ul class="after-current">
