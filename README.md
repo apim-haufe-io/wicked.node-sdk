@@ -125,3 +125,41 @@ const app = require('express')();
 app.use(wicked.correlationIdHandler());
 // ...
 ```
+
+## Promise support
+
+All functions which have a `callback?` parameter also support returning a promise instead of using the callback. If you do not supply the `callback` parameter, all functions will return a `Promise` instead. Unfortunately, the promises which are returned are typically untyped; if somebody knows how to support both callbacks and typed Promises in one function definition, please help me out on that. Thanks.
+
+**Example**:
+
+```
+const wicked = require('wicked-sdk');
+
+const wickedOptions = {
+    userAgentName: 'your-component',
+    userAgentVersion: '1.0.0',
+    apiMaxTries: 10, // optional, defaults to 10
+    apiRetryDelay: 500, // optional, defaults to 500
+};
+
+// You wouldn't do it like this, this is just an example.
+(async () => {
+    // Init wicked SDK and register a machine user.
+    try {
+        const wickedGlobals = await wicked.initialize(wickedOptions);
+        await wicked.initMachineUser('yourcomponent');
+    } catch (err) {
+        console.error('Failed to initialize wicked:');
+        console.error(err);
+        throw err;
+    }
+
+    // Remember some URLs
+    app.set('api_url', wicked.getInternalApiUrl());
+    ...
+
+    // Now you can use wicked as you wish.
+    const registrationCollection = await wicked.getUserRegistrations('regpool', someUserId);
+    // ...
+})();
+```

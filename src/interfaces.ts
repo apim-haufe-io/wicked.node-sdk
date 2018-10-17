@@ -69,7 +69,7 @@ export interface WickedPasswordStrategy {
     strategy: string,
     /** Description of the strategy */
     description: string,
-    /** Regex stirng of the password strategy, for use with `new RegExp()` */
+    /** Regex string of the password strategy, for use with `new RegExp()` */
     regex: string
 }
 
@@ -712,4 +712,96 @@ export interface PassthroughScopeResponse {
     authenticated_userid: string,
     /** An array of valid scopes for the API; please note that the list of scopes must be configured on the API, otherwise a subsequent error will be generated (by the API Gateway). */
     authenticated_scope?: string[]
+}
+
+/**
+ * Interface describing the expected response of a scope lookup request from the portal API, if this
+ * property is set on a specific API. When doing a GET on the specified endpoint, this is the format
+ * of the data which has to be returned.
+ * 
+ * Example: 
+ * 
+ * ```
+ * {
+ *    "scope1": { 
+ *       "description": "This is scope 1"
+ *    },
+ *    "scope2": {
+ *       "description": "This is another scope"
+ *    }
+ * }
+ * ```
+ */
+export interface ScopeLookupResponse {
+    [scope: string]: {
+        description: string
+    }
+}
+
+/** This is the request which is sent out as a POST to a 3rd party username/password validator
+ * if an auth method of the type "external" is configured.
+ */
+export interface ExternalUserPassRequest {
+    /** The username in clear text; this does not necessarily have to be an email address, but may be */
+    username: string,
+    /** The password in clear text */
+    password: string
+}
+
+/**
+ * The expected response type, as a JSON object, of a request to the username/password validation end
+ * point, for auth methods using the "external" auth method type.
+ */
+export interface ExternalUserPassResponse {
+    /**
+     * Mandatory properties:
+     * - sub
+     * - email
+     * 
+     * Can be left empty if request is not successful.
+     */
+    profile?: OidcProfile,
+    /** Short error message if request was not successful */
+    error?: string,
+    /** Optional longer error message if request was not successful */
+    error_description?: string
+}
+
+/**
+ * For auth methods using the ”external" type, this is the payload of requests which are sent to
+ * the backend prior to allowing access tokens to be refreshed. 
+ */
+export interface ExternalRefreshRequest {
+    /**
+     * The authenticated user ID of the user requesting a refreshed token; depending on whether
+     * the API uses passthrough users or wicked backed users, this is either the value
+     * from the the @ExternalUserPassResponse as `sub=<sub value from profile> (when using
+     * passthrough users), or a field containing `sub=<wicked user id>` (when using wicked backed
+     * users). May also contain a `;namespaces=` property.
+     */
+    authenticated_userid: string,
+    /**
+     * This is just for information the scope for which the initial access token was created.
+     * Refreshed tokens are created with the same scope, and cannot be changed here.
+     */
+    authenticated_scope?: string
+}
+
+/**
+ * Expected response (as JSON) of an ExternalRefreshRequest. Contains information on whether
+ * the refresh request shall be allowed or not.
+ */
+export interface ExternalRefreshResponse {
+    /** Return true to allow refresh, otherwise false. */
+    allow_refresh: boolean,
+    /** 
+     * Optional error message if allow_refresh is returned as false. This string may be used
+     * in end-user facing communication.
+     */
+    error?: string,
+    /** 
+     * Optional longer error description in case allow_refresh is returned as false.
+     * This string may be used in end-user facing communication. 
+     */
+    error_description?: string,
 }

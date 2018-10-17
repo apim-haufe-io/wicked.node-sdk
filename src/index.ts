@@ -25,8 +25,8 @@ import * as implementation from './implementation';
  * @param options SDK global options 
  * @param callback Returns an error or the content of the `globals.json` file (as second argument)
  */
-export function initialize(options: WickedInitOptions, callback: Callback<WickedGlobals>): void {
-    implementation._initialize(options, callback);
+export function initialize(options: WickedInitOptions, callback?: Callback<WickedGlobals>) {
+    return implementation._initialize(options, callback);
 }
 
 /**
@@ -52,8 +52,8 @@ export function isDevelopmentMode(): boolean {
  * @param serviceId A unique service ID for the service to create a machine user for
  * @param callback Returns `null` if succeeded, or an error.
  */
-export function initMachineUser(serviceId: string, callback: ErrorCallback): void {
-    implementation._initMachineUser(serviceId, callback);
+export function initMachineUser(serviceId: string, callback?: ErrorCallback) {
+    return implementation._initMachineUser(serviceId, callback);
 };
 
 /**
@@ -63,8 +63,8 @@ export function initMachineUser(serviceId: string, callback: ErrorCallback): voi
  * @param options Await options (see interface)
  * @param callback Returns `null` plus the returned content of the URL, or an error
  */
-export function awaitUrl(url: string, options: WickedAwaitOptions, callback: Callback<any>): void {
-    implementation._awaitUrl(url, options, callback);
+export function awaitUrl(url: string, options: WickedAwaitOptions, callback?: Callback<any>) {
+    return implementation._awaitUrl(url, options, callback);
 };
 
 /**
@@ -73,8 +73,8 @@ export function awaitUrl(url: string, options: WickedAwaitOptions, callback: Cal
  * @param awaitOptions Await options
  * @param callback Returns `null` plus the returned content of the URL, or an error
  */
-export function awaitKongAdapter(awaitOptions: WickedAwaitOptions, callback: Callback<any>): void {
-    implementation._awaitKongAdapter(awaitOptions, callback);
+export function awaitKongAdapter(awaitOptions: WickedAwaitOptions, callback?: Callback<any>) {
+    return implementation._awaitKongAdapter(awaitOptions, callback);
 };
 
 // ======= INFORMATION RETRIEVAL =======
@@ -222,13 +222,13 @@ export function getPasswordStrategy(): string {
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
  */
-export function apiGet(urlPath: string, userIdOrCallback, callback): void {
+export function apiGet(urlPath: string, userIdOrCallback, callback) {
     let userId = userIdOrCallback;
     if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    implementation._apiGet(urlPath, userId, null, callback);
+    return implementation._apiGet(urlPath, userId, null, callback);
 };
 
 /**
@@ -240,13 +240,13 @@ export function apiGet(urlPath: string, userIdOrCallback, callback): void {
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
  */
-export function apiPost(urlPath: string, postBody: object, userIdOrCallback, callback): void {
+export function apiPost(urlPath: string, postBody: object, userIdOrCallback, callback) {
     let userId = userIdOrCallback;
     if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    implementation._apiPost(urlPath, postBody, userId, callback);
+    return implementation._apiPost(urlPath, postBody, userId, callback);
 };
 
 /**
@@ -258,13 +258,13 @@ export function apiPost(urlPath: string, postBody: object, userIdOrCallback, cal
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
  */
-export function apiPut(urlPath: string, putBody: object, userIdOrCallback, callback): void {
+export function apiPut(urlPath: string, putBody: object, userIdOrCallback, callback) {
     let userId = userIdOrCallback;
     if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    implementation._apiPut(urlPath, putBody, userId, callback);
+    return implementation._apiPut(urlPath, putBody, userId, callback);
 };
 
 /**
@@ -276,13 +276,13 @@ export function apiPut(urlPath: string, putBody: object, userIdOrCallback, callb
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
  */
-export function apiPatch(urlPath: string, patchBody: object, userIdOrCallback, callback): void {
+export function apiPatch(urlPath: string, patchBody: object, userIdOrCallback, callback) {
     let userId = userIdOrCallback;
     if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    implementation._apiPatch(urlPath, patchBody, userId, callback);
+    return implementation._apiPatch(urlPath, patchBody, userId, callback);
 };
 
 /**
@@ -293,13 +293,13 @@ export function apiPatch(urlPath: string, patchBody: object, userIdOrCallback, c
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
  */
-export function apiDelete(urlPath: string, userIdOrCallback, callback): void {
+export function apiDelete(urlPath: string, userIdOrCallback, callback) {
     let userId = userIdOrCallback;
     if (!callback && typeof (userIdOrCallback) === 'function') {
         callback = userIdOrCallback;
         userId = null;
     }
-    implementation._apiDelete(urlPath, userId, callback);
+    return implementation._apiDelete(urlPath, userId, callback);
 };
 
 // ======= API CONVENIENCE FUNCTIONS =======
@@ -311,24 +311,24 @@ export function apiDelete(urlPath: string, userIdOrCallback, callback): void {
  * @param callback 
  * @category APIs
  */
-export function getApis(callback: Callback<WickedApiCollection>): void {
-    getApisAs(null, callback);
+export function getApis(callback?: Callback<WickedApiCollection>) {
+    return getApisAs(null, callback);
 }
 
-export function getApisAs(asUserId: string, callback: Callback<WickedApiCollection>): void {
-    apiGet('apis', asUserId, callback);
+export function getApisAs(asUserId: string, callback?: Callback<WickedApiCollection>) {
+    return apiGet('apis', asUserId, callback);
 }
 
 /**
  * Return the generic APIs description (for all APIs). Returns markdown code.
  * @param callback 
  */
-export function getApisDescription(callback: Callback<string>): void {
-    getApisDescriptionAs(null, callback);
+export function getApisDescription(callback?: Callback<string>) {
+    return getApisDescriptionAs(null, callback);
 }
 
-export function getApisDescriptionAs(asUserId: string, callback: Callback<string>): void {
-    apiGet(`apis/desc`, asUserId, callback);
+export function getApisDescriptionAs(asUserId: string, callback?: Callback<string>) {
+    return apiGet(`apis/desc`, asUserId, callback);
 }
 
 /**
@@ -337,12 +337,12 @@ export function getApisDescriptionAs(asUserId: string, callback: Callback<string
  * @param apiId The id of the API to retrieve
  * @param callback 
  */
-export function getApi(apiId: string, callback: Callback<WickedApi>): void {
-    getApiAs(apiId, null, callback);
+export function getApi(apiId: string, callback?: Callback<WickedApi>) {
+    return getApiAs(apiId, null, callback);
 }
 
-export function getApiAs(apiId: string, asUserId: string, callback: Callback<WickedApi>): void {
-    apiGet(`apis/${apiId}`, asUserId, callback);
+export function getApiAs(apiId: string, asUserId: string, callback?: Callback<WickedApi>) {
+    return apiGet(`apis/${apiId}`, asUserId, callback);
 }
 
 /**
@@ -351,12 +351,12 @@ export function getApiAs(apiId: string, asUserId: string, callback: Callback<Wic
  * @param apiId The id of the API to retrieve the description for
  * @param callback 
  */
-export function getApiDescription(apiId: string, callback: Callback<string>): void {
-    getApiDescriptionAs(apiId, null, callback);
+export function getApiDescription(apiId: string, callback?: Callback<string>) {
+    return getApiDescriptionAs(apiId, null, callback);
 }
 
-export function getApiDescriptionAs(apiId: string, asUserId: string, callback: Callback<string>): void {
-    apiGet(`apis/${apiId}/desc`, asUserId, callback);
+export function getApiDescriptionAs(apiId: string, asUserId: string, callback?: Callback<string>) {
+    return apiGet(`apis/${apiId}/desc`, asUserId, callback);
 }
 
 /**
@@ -365,12 +365,12 @@ export function getApiDescriptionAs(apiId: string, asUserId: string, callback: C
  * @param apiId The id of the API to retrieve the Kong config for
  * @param callback 
  */
-export function getApiConfig(apiId: string, callback: Callback<any>): void {
-    getApiConfigAs(apiId, null, callback);
+export function getApiConfig(apiId: string, callback?: Callback<any>) {
+    return getApiConfigAs(apiId, null, callback);
 }
 
-export function getApiConfigAs(apiId: string, asUserId: string, callback: Callback<any>): void {
-    apiGet(`apis/${apiId}/config`, asUserId, callback);
+export function getApiConfigAs(apiId: string, asUserId: string, callback?: Callback<any>) {
+    return apiGet(`apis/${apiId}/config`, asUserId, callback);
 }
 
 /**
@@ -379,12 +379,12 @@ export function getApiConfigAs(apiId: string, asUserId: string, callback: Callba
  * @param apiId The id of the API to retrieve the Swagger JSON for
  * @param callback 
  */
-export function getApiSwagger(apiId: string, callback: Callback<object>): void {
-    getApiSwaggerAs(apiId, null, callback);
+export function getApiSwagger(apiId: string, callback?: Callback<object>) {
+    return getApiSwaggerAs(apiId, null, callback);
 }
 
-export function getApiSwaggerAs(apiId: string, asUserId: string, callback: Callback<object>): void {
-    apiGet(`apis/${apiId}/swagger`, asUserId, callback);
+export function getApiSwaggerAs(apiId: string, asUserId: string, callback?: Callback<object>) {
+    return apiGet(`apis/${apiId}/swagger`, asUserId, callback);
 }
 
 /**
@@ -393,12 +393,12 @@ export function getApiSwaggerAs(apiId: string, asUserId: string, callback: Callb
  * @param apiId The id of the API to retrieve subscriptions for.
  * @param callback 
  */
-export function getApiSubscriptions(apiId: string, callback: Callback<WickedCollection<WickedSubscription>>): void {
-    getApiSubscriptionsAs(apiId, null, callback);
+export function getApiSubscriptions(apiId: string, callback?: Callback<WickedCollection<WickedSubscription>>) {
+    return getApiSubscriptionsAs(apiId, null, callback);
 }
 
-export function getApiSubscriptionsAs(apiId: string, asUserId: string, callback: Callback<WickedCollection<WickedSubscription>>): void {
-    apiGet(`apis/${apiId}/subscriptions`, asUserId, callback);
+export function getApiSubscriptionsAs(apiId: string, asUserId: string, callback?: Callback<WickedCollection<WickedSubscription>>) {
+    return apiGet(`apis/${apiId}/subscriptions`, asUserId, callback);
 }
 
 // PLANS
@@ -409,12 +409,12 @@ export function getApiSubscriptionsAs(apiId: string, asUserId: string, callback:
  * @param apiId The id of the API to retrieve the associated plans for
  * @param callback 
  */
-export function getApiPlans(apiId: string, callback: Callback<WickedApiPlan[]>): void {
-    getApiPlansAs(apiId, null, callback);
+export function getApiPlans(apiId: string, callback?: Callback<WickedApiPlan[]>) {
+    return getApiPlansAs(apiId, null, callback);
 }
 
-export function getApiPlansAs(apiId: string, asUserId: string, callback: Callback<WickedApiPlan[]>): void {
-    apiGet(`apis/${apiId}/plans`, asUserId, callback);
+export function getApiPlansAs(apiId: string, asUserId: string, callback?: Callback<WickedApiPlan[]>) {
+    return apiGet(`apis/${apiId}/plans`, asUserId, callback);
 }
 
 /**
@@ -422,8 +422,8 @@ export function getApiPlansAs(apiId: string, asUserId: string, callback: Callbac
  * endpoint, so there is no `As` alternative.
  * @param callback 
  */
-export function getPlans(callback: Callback<WickedApiPlanCollection>): void {
-    apiGet('plans', null, callback);
+export function getPlans(callback?: Callback<WickedApiPlanCollection>) {
+    return apiGet('plans', null, callback);
 }
 
 // GROUPS
@@ -433,8 +433,8 @@ export function getPlans(callback: Callback<WickedApiPlanCollection>): void {
  * endpoint, so there is no `As` alternative.
  * @param callback 
  */
-export function getGroups(callback: Callback<WickedGroupCollection>): void {
-    apiGet('groups', null, callback);
+export function getGroups(callback?: Callback<WickedGroupCollection>) {
+    return apiGet('groups', null, callback);
 }
 
 // USERS
@@ -445,8 +445,8 @@ export function getGroups(callback: Callback<WickedGroupCollection>): void {
  * @param customId The custom id of the user to retrieve
  * @param callback 
  */
-export function getUserByCustomId(customId: string, callback: Callback<WickedUserShortInfo[]>): void {
-    apiGet(`users?customId=${qs.escape(customId)}`, null, callback);
+export function getUserByCustomId(customId: string, callback?: Callback<WickedUserShortInfo[]>) {
+    return apiGet(`users?customId=${qs.escape(customId)}`, null, callback);
 }
 
 /**
@@ -455,8 +455,8 @@ export function getUserByCustomId(customId: string, callback: Callback<WickedUse
  * @param email The email address of the user to retrieve
  * @param callback 
  */
-export function getUserByEmail(email: string, callback: Callback<WickedUserShortInfo[]>): void {
-    apiGet(`users?email=${qs.escape(email)}`, null, callback);
+export function getUserByEmail(email: string, callback?: Callback<WickedUserShortInfo[]>) {
+    return apiGet(`users?email=${qs.escape(email)}`, null, callback);
 }
 
 /**
@@ -466,14 +466,14 @@ export function getUserByEmail(email: string, callback: Callback<WickedUserShort
  * @param options Collection get options
  * @param callback 
  */
-export function getUsers(options: WickedGetOptions, callback: Callback<WickedUserShortInfo[]>): void {
-    getUsersAs(options, null, callback);
+export function getUsers(options: WickedGetOptions, callback?: Callback<WickedUserShortInfo[]>) {
+    return getUsersAs(options, null, callback);
 }
 
-export function getUsersAs(options: WickedGetOptions, asUserId: string, callback: Callback<WickedUserShortInfo[]>): void {
+export function getUsersAs(options: WickedGetOptions, asUserId: string, callback?: Callback<WickedUserShortInfo[]>) {
     let o = implementation.validateGetOptions(options);
     let url = implementation.buildUrl('users', o);
-    apiGet(url, asUserId, callback);
+    return apiGet(url, asUserId, callback);
 }
 
 /**
@@ -483,12 +483,12 @@ export function getUsersAs(options: WickedGetOptions, asUserId: string, callback
  * @param userCreateInfo The basic user info needed to create a user
  * @param callback 
  */
-export function createUser(userCreateInfo: WickedUserCreateInfo, callback: Callback<WickedUserInfo>): void {
-    createUserAs(userCreateInfo, null, callback);
+export function createUser(userCreateInfo: WickedUserCreateInfo, callback?: Callback<WickedUserInfo>) {
+    return createUserAs(userCreateInfo, null, callback);
 }
 
-export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: string, callback: Callback<WickedUserInfo>): void {
-    apiPost('users', userCreateInfo, asUserId, callback);
+export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: string, callback?: Callback<WickedUserInfo>) {
+    return apiPost('users', userCreateInfo, asUserId, callback);
 }
 
 /**
@@ -497,12 +497,12 @@ export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: str
  * @param userPatchInfo The information of the user to update (password, groups...)
  * @param callback
  */
-export function patchUser(userId: string, userPatchInfo: WickedUserCreateInfo, callback: Callback<WickedUserInfo>): void {
-    patchUserAs(userId, userPatchInfo, null, callback);
+export function patchUser(userId: string, userPatchInfo: WickedUserCreateInfo, callback?: Callback<WickedUserInfo>) {
+    return patchUserAs(userId, userPatchInfo, null, callback);
 }
 
-export function patchUserAs(userId: string, userPatchInfo: WickedUserCreateInfo, asUserId: string, callback: Callback<WickedUserInfo>): void {
-    apiPatch(`users/${userId}`, userPatchInfo, asUserId, callback);
+export function patchUserAs(userId: string, userPatchInfo: WickedUserCreateInfo, asUserId: string, callback?: Callback<WickedUserInfo>) {
+    return apiPatch(`users/${userId}`, userPatchInfo, asUserId, callback);
 }
 
 /**
@@ -512,12 +512,12 @@ export function patchUserAs(userId: string, userPatchInfo: WickedUserCreateInfo,
  * @param userId ID of user to delete
  * @param callback 
  */
-export function deleteUser(userId: string, callback: ErrorCallback): void {
-    deleteUserAs(userId, null, callback);
+export function deleteUser(userId: string, callback?: ErrorCallback) {
+    return deleteUserAs(userId, null, callback);
 }
 
-export function deleteUserAs(userId: string, asUserId: string, callback: ErrorCallback) {
-    apiDelete(`users/${userId}`, asUserId, callback);
+export function deleteUserAs(userId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`users/${userId}`, asUserId, callback);
 }
 
 /**
@@ -526,12 +526,12 @@ export function deleteUserAs(userId: string, asUserId: string, callback: ErrorCa
  * @param userId ID of user to retrieve
  * @param callback 
  */
-export function getUser(userId: string, callback: Callback<WickedUserInfo>): void {
-    getUserAs(userId, null, callback);
+export function getUser(userId: string, callback?: Callback<WickedUserInfo>) {
+    return getUserAs(userId, null, callback);
 }
 
-export function getUserAs(userId: string, asUserId: string, callback: Callback<WickedUserInfo>): void {
-    apiGet(`users/${userId}`, asUserId, callback);
+export function getUserAs(userId: string, asUserId: string, callback?: Callback<WickedUserInfo>) {
+    return apiGet(`users/${userId}`, asUserId, callback);
 }
 
 /**
@@ -541,12 +541,12 @@ export function getUserAs(userId: string, asUserId: string, callback: Callback<W
  * @param userId ID of user to delete password for.
  * @param callback 
  */
-export function deleteUserPassword(userId: string, callback: ErrorCallback): void {
-    deleteUserPasswordAs(userId, null, callback);
+export function deleteUserPassword(userId: string, callback?: ErrorCallback) {
+    return deleteUserPasswordAs(userId, null, callback);
 }
 
-export function deleteUserPasswordAs(userId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`users/${userId}/password`, asUserId, callback);
+export function deleteUserPasswordAs(userId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`users/${userId}/password`, asUserId, callback);
 }
 
 // APPLICATIONS
@@ -557,14 +557,14 @@ export function deleteUserPasswordAs(userId: string, asUserId: string, callback:
  * @param options Get options (filtering, paging)
  * @param callback 
  */
-export function getApplications(options: WickedGetCollectionOptions, callback: Callback<WickedCollection<WickedApplication>>): void {
-    getApplicationsAs(options, null, callback);
+export function getApplications(options: WickedGetCollectionOptions, callback?: Callback<WickedCollection<WickedApplication>>) {
+    return getApplicationsAs(options, null, callback);
 }
 
-export function getApplicationsAs(options: WickedGetCollectionOptions, asUserId: string, callback: Callback<WickedCollection<WickedApplication>>): void {
+export function getApplicationsAs(options: WickedGetCollectionOptions, asUserId: string, callback?: Callback<WickedCollection<WickedApplication>>) {
     const o = implementation.validateGetCollectionOptions(options);
     const url = implementation.buildUrl('applications', o);
-    apiGet(url, asUserId, callback);
+    return apiGet(url, asUserId, callback);
 }
 
 /**
@@ -573,12 +573,12 @@ export function getApplicationsAs(options: WickedGetCollectionOptions, asUserId:
  * @param appCreateInfo Application information for new application
  * @param callback 
  */
-export function createApplication(appCreateInfo: WickedApplicationCreateInfo, callback: Callback<WickedApplication>): void {
-    createApplicationAs(appCreateInfo, null, callback);
+export function createApplication(appCreateInfo: WickedApplicationCreateInfo, callback?: Callback<WickedApplication>) {
+    return createApplicationAs(appCreateInfo, null, callback);
 }
 
-export function createApplicationAs(appCreateInfo: WickedApplicationCreateInfo, asUserId: string, callback: Callback<WickedApplication>): void {
-    apiPost('applications', appCreateInfo, asUserId, callback);
+export function createApplicationAs(appCreateInfo: WickedApplicationCreateInfo, asUserId: string, callback?: Callback<WickedApplication>) {
+    return apiPost('applications', appCreateInfo, asUserId, callback);
 }
 
 /**
@@ -586,8 +586,8 @@ export function createApplicationAs(appCreateInfo: WickedApplicationCreateInfo, 
  * 
  * @param callback 
  */
-export function getApplicationRoles(callback: Callback<WickedApplicationRole[]>): void {
-    apiGet('applications/roles', null, callback);
+export function getApplicationRoles(callback?: Callback<WickedApplicationRole[]>) {
+    return apiGet('applications/roles', null, callback);
 }
 
 /**
@@ -596,12 +596,12 @@ export function getApplicationRoles(callback: Callback<WickedApplicationRole[]>)
  * @param appId ID of application to retrieve
  * @param callback 
  */
-export function getApplication(appId: string, callback: Callback<WickedApplication>): void {
-    getApplicationAs(appId, null, callback);
+export function getApplication(appId: string, callback?: Callback<WickedApplication>) {
+    return getApplicationAs(appId, null, callback);
 }
 
-export function getApplicationAs(appId: string, asUserId: string, callback: Callback<WickedApplication>): void {
-    apiGet(`applications/${appId}`, asUserId, callback);
+export function getApplicationAs(appId: string, asUserId: string, callback?: Callback<WickedApplication>) {
+    return apiGet(`applications/${appId}`, asUserId, callback);
 }
 
 /**
@@ -611,12 +611,12 @@ export function getApplicationAs(appId: string, asUserId: string, callback: Call
  * @param appPatchInfo Patch body
  * @param callback 
  */
-export function patchApplication(appId: string, appPatchInfo: WickedApplicationCreateInfo, callback: Callback<WickedApplication>): void {
-    patchApplicationAs(appId, appPatchInfo, null, callback);
+export function patchApplication(appId: string, appPatchInfo: WickedApplicationCreateInfo, callback?: Callback<WickedApplication>) {
+    return patchApplicationAs(appId, appPatchInfo, null, callback);
 }
 
-export function patchApplicationAs(appId: string, appPatchInfo: WickedApplicationCreateInfo, asUserId: string, callback: Callback<WickedApplication>): void {
-    apiPatch(`applications/${appId}`, appPatchInfo, asUserId, callback);
+export function patchApplicationAs(appId: string, appPatchInfo: WickedApplicationCreateInfo, asUserId: string, callback?: Callback<WickedApplication>) {
+    return apiPatch(`applications/${appId}`, appPatchInfo, asUserId, callback);
 }
 
 /**
@@ -625,12 +625,12 @@ export function patchApplicationAs(appId: string, appPatchInfo: WickedApplicatio
  * @param appId ID of application to delete
  * @param callback 
  */
-export function deleteApplication(appId: string, callback: ErrorCallback): void {
-    deleteApplicationAs(appId, null, callback);
+export function deleteApplication(appId: string, callback?: ErrorCallback) {
+    return deleteApplicationAs(appId, null, callback);
 }
 
-export function deleteApplicationAs(appId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`applications/${appId}`, asUserId, callback);
+export function deleteApplicationAs(appId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`applications/${appId}`, asUserId, callback);
 }
 
 /**
@@ -641,16 +641,16 @@ export function deleteApplicationAs(appId: string, asUserId: string, callback: E
  * @param role The role of the additional owner
  * @param callback 
  */
-export function addApplicationOwner(appId: string, email: string, role: WickedApplicationRoleType, callback: Callback<WickedApplication>): void {
-    addApplicationOwnerAs(appId, email, role, null, callback);
+export function addApplicationOwner(appId: string, email: string, role: WickedApplicationRoleType, callback?: Callback<WickedApplication>) {
+    return addApplicationOwnerAs(appId, email, role, null, callback);
 }
 
-export function addApplicationOwnerAs(appId: string, email: string, role: WickedApplicationRoleType, asUserId: string, callback: Callback<WickedApplication>): void {
+export function addApplicationOwnerAs(appId: string, email: string, role: WickedApplicationRoleType, asUserId: string, callback?: Callback<WickedApplication>) {
     const body = {
         email: email,
         role: role
     };
-    apiPost(`applications/${appId}/owners`, body, asUserId, callback);
+    return apiPost(`applications/${appId}/owners`, body, asUserId, callback);
 }
 
 /**
@@ -660,12 +660,12 @@ export function addApplicationOwnerAs(appId: string, email: string, role: Wicked
  * @param email Email address of owner to delete from application
  * @param callback 
  */
-export function deleteApplicationOwner(appId: string, email: string, callback: Callback<WickedApplication>): void {
-    deleteApplicationOwnerAs(appId, email, null, callback);
+export function deleteApplicationOwner(appId: string, email: string, callback?: Callback<WickedApplication>) {
+    return deleteApplicationOwnerAs(appId, email, null, callback);
 }
 
-export function deleteApplicationOwnerAs(appId: string, email: string, asUserId: string, callback: Callback<WickedApplication>): void {
-    apiDelete(`applications/${appId}/owners?email=${qs.escape(email)}`, asUserId, callback);
+export function deleteApplicationOwnerAs(appId: string, email: string, asUserId: string, callback?: Callback<WickedApplication>) {
+    return apiDelete(`applications/${appId}/owners?email=${qs.escape(email)}`, asUserId, callback);
 }
 
 // SUBSCRIPTIONS
@@ -676,12 +676,12 @@ export function deleteApplicationOwnerAs(appId: string, email: string, asUserId:
  * @param appId ID of application to retrieve subscriptions for
  * @param callback 
  */
-export function getSubscriptions(appId: string, callback: Callback<WickedSubscription[]>): void {
-    getSubscriptionsAs(appId, null, callback);
+export function getSubscriptions(appId: string, callback?: Callback<WickedSubscription[]>) {
+    return getSubscriptionsAs(appId, null, callback);
 }
 
-export function getSubscriptionsAs(appId: string, asUserId: string, callback: Callback<WickedSubscription[]>): void {
-    apiGet(`applications/${appId}/subscriptions`, asUserId, callback);
+export function getSubscriptionsAs(appId: string, asUserId: string, callback?: Callback<WickedSubscription[]>) {
+    return apiGet(`applications/${appId}/subscriptions`, asUserId, callback);
 }
 
 /**
@@ -691,12 +691,12 @@ export function getSubscriptionsAs(appId: string, asUserId: string, callback: Ca
  * @param apiId ID of API
  * @param callback 
  */
-export function getSubscriptionByClientId(clientId: string, apiId: string, callback: Callback<WickedSubscriptionInfo>): void {
-    getSubscriptionByClientIdAs(clientId, apiId, null, callback);
+export function getSubscriptionByClientId(clientId: string, apiId: string, callback?: Callback<WickedSubscriptionInfo>): void | Promise<WickedSubscriptionInfo> {
+    return getSubscriptionByClientIdAs(clientId, apiId, null, callback);
 }
 
-export function getSubscriptionByClientIdAs(clientId: string, apiId: string, asUserId: string, callback: Callback<WickedSubscriptionInfo>): void {
-    implementation._getSubscriptionByClientId(clientId, apiId, asUserId, callback);
+export function getSubscriptionByClientIdAs(clientId: string, apiId: string, asUserId: string, callback?: Callback<WickedSubscriptionInfo>): void | Promise<WickedSubscriptionInfo> {
+    return implementation._getSubscriptionByClientId(clientId, apiId, asUserId, callback);
 }
 
 /**
@@ -706,12 +706,12 @@ export function getSubscriptionByClientIdAs(clientId: string, apiId: string, asU
  * @param subsCreateInfo Subscription create info (see type)
  * @param callback 
  */
-export function createSubscription(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, callback: Callback<WickedSubscription>): void {
-    createSubscriptionAs(appId, subsCreateInfo, null, callback);
+export function createSubscription(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, callback?: Callback<WickedSubscription>) {
+    return createSubscriptionAs(appId, subsCreateInfo, null, callback);
 }
 
-export function createSubscriptionAs(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, asUserId: string, callback: Callback<WickedSubscription>): void {
-    apiPost(`applications/${appId}/subscriptions`, subsCreateInfo, asUserId, callback);
+export function createSubscriptionAs(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, asUserId: string, callback?: Callback<WickedSubscription>) {
+    return apiPost(`applications/${appId}/subscriptions`, subsCreateInfo, asUserId, callback);
 }
 
 /**
@@ -721,12 +721,12 @@ export function createSubscriptionAs(appId: string, subsCreateInfo: WickedSubscr
  * @param apiId ID of API to which the subscription applies
  * @param callback 
  */
-export function getSubscription(appId: string, apiId: string, callback: Callback<WickedSubscription>): void {
-    getSubscriptionAs(appId, apiId, null, callback);
+export function getSubscription(appId: string, apiId: string, callback?: Callback<WickedSubscription>) {
+    return getSubscriptionAs(appId, apiId, null, callback);
 }
 
-export function getSubscriptionAs(appId: string, apiId: string, asUserId: string, callback: Callback<WickedSubscription>): void {
-    apiGet(`applications/${appId}/subscriptions/${apiId}`, asUserId, callback);
+export function getSubscriptionAs(appId: string, apiId: string, asUserId: string, callback?: Callback<WickedSubscription>) {
+    return apiGet(`applications/${appId}/subscriptions/${apiId}`, asUserId, callback);
 }
 
 /**
@@ -738,12 +738,12 @@ export function getSubscriptionAs(appId: string, apiId: string, asUserId: string
  * @param patchInfo Patch information (see type)
  * @param callback 
  */
-export function patchSubscription(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, callback: Callback<WickedSubscription>): void {
-    patchSubscriptionAs(appId, apiId, patchInfo, null, callback);
+export function patchSubscription(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, callback?: Callback<WickedSubscription>) {
+    return patchSubscriptionAs(appId, apiId, patchInfo, null, callback);
 }
 
-export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, asUserId: string, callback: Callback<WickedSubscription>): void {
-    apiPatch(`applications/${appId}/apis/${apiId}`, patchInfo, asUserId, callback);
+export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, asUserId: string, callback?: Callback<WickedSubscription>) {
+    return apiPatch(`applications/${appId}/apis/${apiId}`, patchInfo, asUserId, callback);
 }
 
 // APPROVALS
@@ -753,12 +753,12 @@ export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: Wic
  * 
  * @param callback 
  */
-export function getApprovals(callback: Callback<WickedApproval[]>): void {
-    getApprovalsAs(null, callback);
+export function getApprovals(callback?: Callback<WickedApproval[]>) {
+    return getApprovalsAs(null, callback);
 }
 
-export function getApprovalsAs(asUserId: string, callback: Callback<WickedApproval[]>): void {
-    apiGet('approvals', asUserId, callback);
+export function getApprovalsAs(asUserId: string, callback?: Callback<WickedApproval[]>) {
+    return apiGet('approvals', asUserId, callback);
 }
 
 /**
@@ -767,12 +767,12 @@ export function getApprovalsAs(asUserId: string, callback: Callback<WickedApprov
  * @param approvalId ID of approval to retrieve
  * @param callback 
  */
-export function getApproval(approvalId: string, callback: Callback<WickedApproval>): void {
-    getApprovalAs(approvalId, null, callback);
+export function getApproval(approvalId: string, callback?: Callback<WickedApproval>) {
+    return getApprovalAs(approvalId, null, callback);
 }
 
-export function getApprovalAs(approvalId: string, asUserId: string, callback: Callback<WickedApproval>): void {
-    apiGet(`approvals/${approvalId}`, asUserId, callback);
+export function getApprovalAs(approvalId: string, asUserId: string, callback?: Callback<WickedApproval>) {
+    return apiGet(`approvals/${approvalId}`, asUserId, callback);
 }
 
 // VERIFICATIONS
@@ -785,12 +785,12 @@ export function getApprovalAs(approvalId: string, asUserId: string, callback: Ca
  * @param verification Verification information to create a verification record for
  * @param callback 
  */
-export function createVerification(verification: WickedVerification, callback: ErrorCallback): void {
-    createVerificationAs(verification, null, callback);
+export function createVerification(verification: WickedVerification, callback?: ErrorCallback) {
+    return createVerificationAs(verification, null, callback);
 }
 
-export function createVerificationAs(verification: WickedVerification, asUserId: string, callback: ErrorCallback): void {
-    apiPost('verifications', verification, asUserId, callback);
+export function createVerificationAs(verification: WickedVerification, asUserId: string, callback?: ErrorCallback) {
+    return apiPost('verifications', verification, asUserId, callback);
 }
 
 /**
@@ -798,12 +798,12 @@ export function createVerificationAs(verification: WickedVerification, asUserId:
  * 
  * @param callback 
  */
-export function getVerifications(callback: Callback<WickedVerification[]>): void {
-    getVerificationsAs(null, callback);
+export function getVerifications(callback?: Callback<WickedVerification[]>) {
+    return getVerificationsAs(null, callback);
 }
 
-export function getVerificationsAs(asUserId: string, callback: Callback<WickedVerification[]>): void {
-    apiGet('verificaations', asUserId, callback);
+export function getVerificationsAs(asUserId: string, callback?: Callback<WickedVerification[]>) {
+    return apiGet('verificaations', asUserId, callback);
 }
 
 /**
@@ -812,12 +812,12 @@ export function getVerificationsAs(asUserId: string, callback: Callback<WickedVe
  * @param verificationId ID of verification to retrieve.
  * @param callback 
  */
-export function getVerification(verificationId, callback: Callback<WickedVerification>): void {
-    getVerificationAs(verificationId, null, callback);
+export function getVerification(verificationId, callback?: Callback<WickedVerification>) {
+    return getVerificationAs(verificationId, null, callback);
 }
 
-export function getVerificationAs(verificationId, asUserId: string, callback: Callback<WickedVerification>): void {
-    apiGet(`verifications/${verificationId}`, asUserId, callback);
+export function getVerificationAs(verificationId, asUserId: string, callback?: Callback<WickedVerification>) {
+    return apiGet(`verifications/${verificationId}`, asUserId, callback);
 }
 
 /**
@@ -826,40 +826,40 @@ export function getVerificationAs(verificationId, asUserId: string, callback: Ca
  * @param verificationId ID of verification to delete.
  * @param callback 
  */
-export function deleteVerification(verificationId: string, callback: ErrorCallback): void {
-    deleteVerificationAs(verificationId, null, callback);
+export function deleteVerification(verificationId: string, callback?: ErrorCallback) {
+    return deleteVerificationAs(verificationId, null, callback);
 }
 
-export function deleteVerificationAs(verificationId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`verifications/${verificationId}`, asUserId, callback);
+export function deleteVerificationAs(verificationId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`verifications/${verificationId}`, asUserId, callback);
 }
 
 // SYSTEM HEALTH
 
-export function getSystemHealth(callback: Callback<WickedComponentHealth[]>): void {
-    getSystemHealthAs(null, callback);
+export function getSystemHealth(callback?: Callback<WickedComponentHealth[]>) {
+    return getSystemHealthAs(null, callback);
 }
 
-export function getSystemHealthAs(asUserId: string, callback: Callback<WickedComponentHealth[]>): void {
-    apiGet('systemhealth', asUserId, callback);
+export function getSystemHealthAs(asUserId: string, callback?: Callback<WickedComponentHealth[]>) {
+    return apiGet('systemhealth', asUserId, callback);
 }
 
 // TEMPLATES
 
-export function getChatbotTemplates(callback: Callback<WickedChatbotTemplates>): void {
-    getChatbotTemplatesAs(null, callback);
+export function getChatbotTemplates(callback?: Callback<WickedChatbotTemplates>) {
+    return getChatbotTemplatesAs(null, callback);
 }
 
-export function getChatbotTemplatesAs(asUserId: string, callback: Callback<WickedChatbotTemplates>): void {
-    apiGet('templates/chatbot', asUserId, callback);
+export function getChatbotTemplatesAs(asUserId: string, callback?: Callback<WickedChatbotTemplates>) {
+    return apiGet('templates/chatbot', asUserId, callback);
 }
 
-export function getEmailTemplate(templateId: WickedEmailTemplateType, callback: Callback<string>): void {
-    getEmailTemplateAs(templateId, null, callback);
+export function getEmailTemplate(templateId: WickedEmailTemplateType, callback?: Callback<string>) {
+    return getEmailTemplateAs(templateId, null, callback);
 }
 
-export function getEmailTemplateAs(templateId: WickedEmailTemplateType, asUserId: string, callback: Callback<string>): void {
-    apiGet(`templates/email/${templateId}`, asUserId, callback);
+export function getEmailTemplateAs(templateId: WickedEmailTemplateType, asUserId: string, callback?: Callback<string>) {
+    return apiGet(`templates/email/${templateId}`, asUserId, callback);
 }
 
 // AUTH-SERVERS
@@ -869,12 +869,12 @@ export function getEmailTemplateAs(templateId: WickedEmailTemplateType, asUserId
  * get further information, use getAuthServer().
  * @param callback 
  */
-export function getAuthServerNames(callback: Callback<string[]>): void {
-    getAuthServerNamesAs(null, callback);
+export function getAuthServerNames(callback?: Callback<string[]>) {
+    return getAuthServerNamesAs(null, callback);
 }
 
-export function getAuthServerNamesAs(asUserId: string, callback: Callback<string[]>): void {
-    apiGet('auth-servers', asUserId, callback);
+export function getAuthServerNamesAs(asUserId: string, callback?: Callback<string[]>) {
+    return apiGet('auth-servers', asUserId, callback);
 }
 
 /**
@@ -883,12 +883,12 @@ export function getAuthServerNamesAs(asUserId: string, callback: Callback<string
  * @param serverId ID of authorization server to retrieve information on.
  * @param callback 
  */
-export function getAuthServer(serverId: string, callback: Callback<WickedAuthServer>): void {
-    getAuthServerAs(serverId, null, callback);
+export function getAuthServer(serverId: string, callback?: Callback<WickedAuthServer>) {
+    return getAuthServerAs(serverId, null, callback);
 }
 
-export function getAuthServerAs(serverId: string, asUserId: string, callback: Callback<WickedAuthServer>): void {
-    apiGet(`auth-servers/${serverId}`, asUserId, callback);
+export function getAuthServerAs(serverId: string, asUserId: string, callback?: Callback<WickedAuthServer>) {
+    return apiGet(`auth-servers/${serverId}`, asUserId, callback);
 }
 
 // WEBHOOKS
@@ -898,12 +898,12 @@ export function getAuthServerAs(serverId: string, asUserId: string, callback: Ca
  * 
  * @param callback 
  */
-export function getWebhookListeners(callback: Callback<WickedWebhookListener[]>): void {
-    getWebhookListenersAs(null, callback);
+export function getWebhookListeners(callback?: Callback<WickedWebhookListener[]>) {
+    return getWebhookListenersAs(null, callback);
 }
 
-export function getWebhookListenersAs(asUserId: string, callback: Callback<WickedWebhookListener[]>): void {
-    apiGet('webhooks/listeners', asUserId, callback);
+export function getWebhookListenersAs(asUserId: string, callback?: Callback<WickedWebhookListener[]>) {
+    return apiGet('webhooks/listeners', asUserId, callback);
 }
 
 /**
@@ -916,12 +916,12 @@ export function getWebhookListenersAs(asUserId: string, callback: Callback<Wicke
  * @param listener Data of listener to insert or update
  * @param callback 
  */
-export function upsertWebhookListener(listenerId: string, listener: WickedWebhookListener, callback: ErrorCallback): void {
-    upsertWebhookListenerAs(listenerId, listener, null, callback);
+export function upsertWebhookListener(listenerId: string, listener: WickedWebhookListener, callback?: ErrorCallback) {
+    return upsertWebhookListenerAs(listenerId, listener, null, callback);
 }
 
-export function upsertWebhookListenerAs(listenerId: string, listener: WickedWebhookListener, asUserId: string, callback: ErrorCallback): void {
-    apiPut(`webhooks/listeners/${listenerId}`, listener, asUserId, callback);
+export function upsertWebhookListenerAs(listenerId: string, listener: WickedWebhookListener, asUserId: string, callback?: ErrorCallback) {
+    return apiPut(`webhooks/listeners/${listenerId}`, listener, asUserId, callback);
 }
 
 /**
@@ -930,12 +930,12 @@ export function upsertWebhookListenerAs(listenerId: string, listener: WickedWebh
  * @param listenerId ID of webhook listener to delete
  * @param callback 
  */
-export function deleteWebhookListener(listenerId: string, callback: ErrorCallback): void {
-    deleteWebhookListenerAs(listenerId, null, callback);
+export function deleteWebhookListener(listenerId: string, callback?: ErrorCallback) {
+    return deleteWebhookListenerAs(listenerId, null, callback);
 }
 
-export function deleteWebhookListenerAs(listenerId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`webhooks/listeners/${listenerId}`, asUserId, callback);
+export function deleteWebhookListenerAs(listenerId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`webhooks/listeners/${listenerId}`, asUserId, callback);
 }
 
 /**
@@ -945,12 +945,12 @@ export function deleteWebhookListenerAs(listenerId: string, asUserId: string, ca
  * @param listenerId ID of webhook listener to retrieve pending events for
  * @param callback 
  */
-export function getWebhookEvents(listenerId: string, callback: Callback<WickedEvent[]>): void {
-    getWebhookEventsAs(listenerId, null, callback);
+export function getWebhookEvents(listenerId: string, callback?: Callback<WickedEvent[]>) {
+    return getWebhookEventsAs(listenerId, null, callback);
 }
 
-export function getWebhookEventsAs(listenerId: string, asUserId: string, callback: Callback<WickedEvent[]>): void {
-    apiGet(`webhooks/events/${listenerId}`, asUserId, callback);
+export function getWebhookEventsAs(listenerId: string, asUserId: string, callback?: Callback<WickedEvent[]>) {
+    return apiGet(`webhooks/events/${listenerId}`, asUserId, callback);
 }
 
 /**
@@ -959,12 +959,12 @@ export function getWebhookEventsAs(listenerId: string, asUserId: string, callbac
  * @param listenerId ID of webhook listener to flush all events for.
  * @param callback 
  */
-export function flushWebhookEvents(listenerId: string, callback: ErrorCallback): void {
-    flushWebhookEventsAs(listenerId, null, callback);
+export function flushWebhookEvents(listenerId: string, callback?: ErrorCallback) {
+    return flushWebhookEventsAs(listenerId, null, callback);
 }
 
-export function flushWebhookEventsAs(listenerId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`webhooks/events/${listenerId}`, asUserId, callback);
+export function flushWebhookEventsAs(listenerId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`webhooks/events/${listenerId}`, asUserId, callback);
 }
 
 /**
@@ -974,12 +974,12 @@ export function flushWebhookEventsAs(listenerId: string, asUserId: string, callb
  * @param eventId ID of event to delete
  * @param callback 
  */
-export function deleteWebhookEvent(listenerId: string, eventId: string, callback: ErrorCallback): void {
-    deleteWebhookEventAs(listenerId, eventId, null, callback);
+export function deleteWebhookEvent(listenerId: string, eventId: string, callback?: ErrorCallback) {
+    return deleteWebhookEventAs(listenerId, eventId, null, callback);
 }
 
-export function deleteWebhookEventAs(listenerId: string, eventId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`webhooks/events/${listenerId}/${eventId}`, asUserId, callback);
+export function deleteWebhookEventAs(listenerId: string, eventId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`webhooks/events/${listenerId}/${eventId}`, asUserId, callback);
 }
 
 // REGISTRATION POOLS
@@ -989,12 +989,12 @@ export function deleteWebhookEventAs(listenerId: string, eventId: string, asUser
  * 
  * @param callback 
  */
-export function getRegistrationPools(callback: Callback<WickedPoolMap>): void {
-    getRegistrationPoolsAs(null, callback);
+export function getRegistrationPools(callback?: Callback<WickedPoolMap>) {
+    return getRegistrationPoolsAs(null, callback);
 }
 
-export function getRegistrationPoolsAs(asUserId: string, callback: Callback<WickedPoolMap>): void {
-    apiGet('pools', asUserId, callback);
+export function getRegistrationPoolsAs(asUserId: string, callback?: Callback<WickedPoolMap>) {
+    return apiGet('pools', asUserId, callback);
 }
 
 /**
@@ -1003,12 +1003,12 @@ export function getRegistrationPoolsAs(asUserId: string, callback: Callback<Wick
  * @param poolId ID of pool to retrieve information on
  * @param callback 
  */
-export function getRegistrationPool(poolId: string, callback: Callback<WickedPool>): void {
-    getRegistrationPoolAs(poolId, null, callback);
+export function getRegistrationPool(poolId: string, callback?: Callback<WickedPool>) {
+    return getRegistrationPoolAs(poolId, null, callback);
 }
 
-export function getRegistrationPoolAs(poolId: string, asUserId: string, callback: Callback<WickedPool>): void {
-    apiGet(`pools/${poolId}`, asUserId, callback);
+export function getRegistrationPoolAs(poolId: string, asUserId: string, callback?: Callback<WickedPool>) {
+    return apiGet(`pools/${poolId}`, asUserId, callback);
 }
 
 // NAMESPACES
@@ -1021,14 +1021,14 @@ export function getRegistrationPoolAs(poolId: string, asUserId: string, callback
  * @param options Get retrieval options (paging, filtering)
  * @param callback 
  */
-export function getPoolNamespaces(poolId: string, options: WickedGetCollectionOptions, callback: Callback<WickedCollection<WickedNamespace>>): void {
-    getPoolNamespacesAs(poolId, options, null, callback);
+export function getPoolNamespaces(poolId: string, options: WickedGetCollectionOptions, callback?: Callback<WickedCollection<WickedNamespace>>) {
+    return getPoolNamespacesAs(poolId, options, null, callback);
 }
 
-export function getPoolNamespacesAs(poolId: string, options: WickedGetCollectionOptions, asUserId: string, callback: Callback<WickedCollection<WickedNamespace>>): void {
+export function getPoolNamespacesAs(poolId: string, options: WickedGetCollectionOptions, asUserId: string, callback?: Callback<WickedCollection<WickedNamespace>>) {
     const o = implementation.validateGetCollectionOptions(options);
     const url = implementation.buildUrl(`pools/${poolId}/namespaces`, options);
-    apiGet(url, asUserId, callback);
+    return apiGet(url, asUserId, callback);
 }
 
 /**
@@ -1039,12 +1039,12 @@ export function getPoolNamespacesAs(poolId: string, options: WickedGetCollection
  * @param namespaceId ID of namespace to retrieve
  * @param callback 
  */
-export function getPoolNamespace(poolId: string, namespaceId: string, callback: Callback<WickedNamespace>): void {
-    getPoolNamespaceAs(poolId, namespaceId, null, callback);
+export function getPoolNamespace(poolId: string, namespaceId: string, callback?: Callback<WickedNamespace>) {
+    return getPoolNamespaceAs(poolId, namespaceId, null, callback);
 }
 
-export function getPoolNamespaceAs(poolId: string, namespaceId: string, asUserId: string, callback: Callback<WickedNamespace>): void {
-    apiGet(`pools/${poolId}/namespaces/${namespaceId}`, asUserId, callback);
+export function getPoolNamespaceAs(poolId: string, namespaceId: string, asUserId: string, callback?: Callback<WickedNamespace>) {
+    return apiGet(`pools/${poolId}/namespaces/${namespaceId}`, asUserId, callback);
 }
 
 /**
@@ -1056,12 +1056,12 @@ export function getPoolNamespaceAs(poolId: string, namespaceId: string, asUserId
  * @param namespaceInfo New namespace data to store for this namespace
  * @param callback 
  */
-export function upsertPoolNamespace(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, callback: ErrorCallback): void {
-    upsertPoolNamespaceAs(poolId, namespaceId, namespaceInfo, null, callback);
+export function upsertPoolNamespace(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, callback?: ErrorCallback) {
+    return upsertPoolNamespaceAs(poolId, namespaceId, namespaceInfo, null, callback);
 }
 
-export function upsertPoolNamespaceAs(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, asUserId: string, callback: ErrorCallback): void {
-    apiPut(`pools/${poolId}/namespaces/${namespaceId}`, namespaceInfo, asUserId, callback);
+export function upsertPoolNamespaceAs(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, asUserId: string, callback?: ErrorCallback) {
+    return apiPut(`pools/${poolId}/namespaces/${namespaceId}`, namespaceInfo, asUserId, callback);
 }
 
 /**
@@ -1072,12 +1072,12 @@ export function upsertPoolNamespaceAs(poolId: string, namespaceId: string, names
  * @param namespaceId ID of namespace to delete
  * @param callback 
  */
-export function deletePoolNamespace(poolId: string, namespaceId: string, callback: ErrorCallback): void {
-    deletePoolNamespaceAs(poolId, namespaceId, null, callback);
+export function deletePoolNamespace(poolId: string, namespaceId: string, callback?: ErrorCallback) {
+    return deletePoolNamespaceAs(poolId, namespaceId, null, callback);
 }
 
-export function deletePoolNamespaceAs(poolId: string, namespaceId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`pools/${poolId}/namespaces/${namespaceId}`, asUserId, callback);
+export function deletePoolNamespaceAs(poolId: string, namespaceId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`pools/${poolId}/namespaces/${namespaceId}`, asUserId, callback);
 }
 
 // REGISTRATIONS
@@ -1092,16 +1092,16 @@ export function deletePoolNamespaceAs(poolId: string, namespaceId: string, asUse
  * @param options Get options, e.g. namespace filtering, generic filtering and paging
  * @param callback 
  */
-export function getPoolRegistrations(poolId: string, options: WickedGetRegistrationOptions, callback: Callback<WickedCollection<WickedRegistration>>): void {
-    getPoolRegistrationsAs(poolId, options, null, callback);
+export function getPoolRegistrations(poolId: string, options: WickedGetRegistrationOptions, callback?: Callback<WickedCollection<WickedRegistration>>) {
+    return getPoolRegistrationsAs(poolId, options, null, callback);
 }
 
-export function getPoolRegistrationsAs(poolId: string, options: WickedGetRegistrationOptions, asUserId: string, callback: Callback<WickedCollection<WickedRegistration>>): void {
+export function getPoolRegistrationsAs(poolId: string, options: WickedGetRegistrationOptions, asUserId: string, callback?: Callback<WickedCollection<WickedRegistration>>) {
     const o = implementation.validateGetCollectionOptions(options) as WickedGetRegistrationOptions;
     if (options.namespace)
         o.namespace = options.namespace;
     const url = implementation.buildUrl(`registrations/pools/${poolId}`, o);
-    apiGet(url, asUserId, callback);
+    return apiGet(url, asUserId, callback);
 }
 
 /**
@@ -1115,12 +1115,12 @@ export function getPoolRegistrationsAs(poolId: string, options: WickedGetRegistr
  * @param userId ID of user to retrieve registrations for
  * @param callback 
  */
-export function getUserRegistrations(poolId: string, userId: string, callback: Callback<WickedCollection<WickedRegistration>>): void {
-    getUserRegistrationsAs(poolId, userId, null, callback);
+export function getUserRegistrations(poolId: string, userId: string, callback?: Callback<WickedCollection<WickedRegistration>>) {
+    return getUserRegistrationsAs(poolId, userId, null, callback);
 }
 
-export function getUserRegistrationsAs(poolId: string, userId: string, asUserId: string, callback: Callback<WickedCollection<WickedRegistration>>): void {
-    apiGet(`registrations/pools/${poolId}/users/${userId}`, asUserId, callback);
+export function getUserRegistrationsAs(poolId: string, userId: string, asUserId: string, callback?: Callback<WickedCollection<WickedRegistration>>) {
+    return apiGet(`registrations/pools/${poolId}/users/${userId}`, asUserId, callback);
 }
 
 /**
@@ -1134,12 +1134,12 @@ export function getUserRegistrationsAs(poolId: string, userId: string, asUserId:
  * @param userRegistration User registration data.
  * @param callback 
  */
-export function upsertUserRegistration(poolId: string, userId: string, userRegistration: WickedRegistration, callback: ErrorCallback): void {
-    upsertUserRegistrationAs(poolId, userId, userRegistration, null, callback);
+export function upsertUserRegistration(poolId: string, userId: string, userRegistration: WickedRegistration, callback?: ErrorCallback) {
+    return upsertUserRegistrationAs(poolId, userId, userRegistration, null, callback);
 }
 
-export function upsertUserRegistrationAs(poolId: string, userId: string, userRegistration: WickedRegistration, asUserId: string, callback: ErrorCallback): void {
-    apiPut(`registrations/pools/${poolId}/users/${userId}`, userRegistration, asUserId, callback);
+export function upsertUserRegistrationAs(poolId: string, userId: string, userRegistration: WickedRegistration, asUserId: string, callback?: ErrorCallback) {
+    return apiPut(`registrations/pools/${poolId}/users/${userId}`, userRegistration, asUserId, callback);
 }
 
 /**
@@ -1150,16 +1150,16 @@ export function upsertUserRegistrationAs(poolId: string, userId: string, userReg
  * @param namespaceId Namespace to delete registration for; for registration pools not requiring a namespace, this must be `null`, otherwise it must be specified
  * @param callback 
  */
-export function deleteUserRegistration(poolId: string, userId: string, namespaceId: string, callback: ErrorCallback): void {
-    deleteUserRegistrationAs(poolId, userId, namespaceId, null, callback);
+export function deleteUserRegistration(poolId: string, userId: string, namespaceId: string, callback?: ErrorCallback) {
+    return deleteUserRegistrationAs(poolId, userId, namespaceId, null, callback);
 }
 
-export function deleteUserRegistrationAs(poolId: string, userId: string, namespaceId: string, asUserId: string, callback: ErrorCallback): void {
+export function deleteUserRegistrationAs(poolId: string, userId: string, namespaceId: string, asUserId: string, callback?: ErrorCallback) {
     const o = {} as any;
     if (namespaceId)
         o.namespace = namespaceId;
     const url = implementation.buildUrl(`registrations/pools/${poolId}/users/${userId}`, o);
-    apiDelete(url, asUserId, callback);
+    return apiDelete(url, asUserId, callback);
 }
 
 /**
@@ -1168,12 +1168,12 @@ export function deleteUserRegistrationAs(poolId: string, userId: string, namespa
  * @param userId ID of user to retrieve all registrations for.
  * @param callback 
  */
-export function getAllUserRegistrations(userId: string, callback: Callback<WickedRegistrationMap>): void {
-    getAllUserRegistrationsAs(userId, null, callback);
+export function getAllUserRegistrations(userId: string, callback?: Callback<WickedRegistrationMap>) {
+    return getAllUserRegistrationsAs(userId, null, callback);
 }
 
-export function getAllUserRegistrationsAs(userId: string, asUserId: string, callback: Callback<WickedRegistrationMap>): void {
-    apiGet(`registrations/users/${userId}`, asUserId, callback);
+export function getAllUserRegistrationsAs(userId: string, asUserId: string, callback?: Callback<WickedRegistrationMap>) {
+    return apiGet(`registrations/users/${userId}`, asUserId, callback);
 }
 
 // GRANTS
@@ -1185,14 +1185,14 @@ export function getAllUserRegistrationsAs(userId: string, asUserId: string, call
  * @param options Get options (filtering, paging,...)
  * @param callback 
  */
-export function getUserGrants(userId: string, options: WickedGetOptions, callback: Callback<WickedCollection<WickedGrant>>): void {
-    getUserGrantsAs(userId, options, null, callback);
+export function getUserGrants(userId: string, options: WickedGetOptions, callback?: Callback<WickedCollection<WickedGrant>>) {
+    return getUserGrantsAs(userId, options, null, callback);
 }
 
-export function getUserGrantsAs(userId: string, options: WickedGetOptions, asUserId: string, callback: Callback<WickedCollection<WickedGrant>>): void {
+export function getUserGrantsAs(userId: string, options: WickedGetOptions, asUserId: string, callback?: Callback<WickedCollection<WickedGrant>>) {
     const o = implementation.validateGetOptions(options);
     const url = implementation.buildUrl(`grants/${userId}`, o);
-    apiGet(url, asUserId, callback);
+    return apiGet(url, asUserId, callback);
 }
 
 /**
@@ -1203,12 +1203,12 @@ export function getUserGrantsAs(userId: string, options: WickedGetOptions, asUse
  * @param userId ID of user to delete all grants for.
  * @param callback 
  */
-export function deleteAllUserGrants(userId: string, callback: ErrorCallback): void {
-    deleteAllUserGrantsAs(userId, null, callback);
+export function deleteAllUserGrants(userId: string, callback?: ErrorCallback) {
+    return deleteAllUserGrantsAs(userId, null, callback);
 }
 
-export function deleteAllUserGrantsAs(userId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`grants/${userId}`, asUserId, callback);
+export function deleteAllUserGrantsAs(userId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`grants/${userId}`, asUserId, callback);
 }
 
 /**
@@ -1219,12 +1219,12 @@ export function deleteAllUserGrantsAs(userId: string, asUserId: string, callback
  * @param apiId ID of API for which to retrieve the grant
  * @param callback 
  */
-export function getUserGrant(userId: string, applicationId: string, apiId: string, callback: Callback<WickedGrant>): void {
-    getUserGrantAs(userId, applicationId, apiId, null, callback);
+export function getUserGrant(userId: string, applicationId: string, apiId: string, callback?: Callback<WickedGrant>) {
+    return getUserGrantAs(userId, applicationId, apiId, null, callback);
 }
 
-export function getUserGrantAs(userId: string, applicationId: string, apiId: string, asUserId: string, callback: Callback<WickedGrant>): void {
-    apiGet(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, asUserId, callback);
+export function getUserGrantAs(userId: string, applicationId: string, apiId: string, asUserId: string, callback?: Callback<WickedGrant>) {
+    return apiGet(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, asUserId, callback);
 }
 
 /**
@@ -1239,12 +1239,12 @@ export function getUserGrantAs(userId: string, applicationId: string, apiId: str
  * @param grantInfo Grant information to store
  * @param callback 
  */
-export function upsertUserGrant(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, callback: ErrorCallback): void {
-    upsertUserGrantAs(userId, applicationId, apiId, grantInfo, null, callback);
+export function upsertUserGrant(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, callback?: ErrorCallback) {
+    return upsertUserGrantAs(userId, applicationId, apiId, grantInfo, null, callback);
 }
 
-export function upsertUserGrantAs(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, asUserId: string, callback: ErrorCallback): void {
-    apiPut(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, grantInfo, asUserId, callback);
+export function upsertUserGrantAs(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, asUserId: string, callback?: ErrorCallback) {
+    return apiPut(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, grantInfo, asUserId, callback);
 }
 
 /**
@@ -1255,12 +1255,12 @@ export function upsertUserGrantAs(userId: string, applicationId: string, apiId: 
  * @param apiId ID of API to delete a grant for
  * @param callback 
  */
-export function deleteUserGrant(userId: string, applicationId: string, apiId: string, callback: ErrorCallback): void {
-    deleteUserGrantAs(userId, applicationId, apiId, null, callback);
+export function deleteUserGrant(userId: string, applicationId: string, apiId: string, callback?: ErrorCallback) {
+    return deleteUserGrantAs(userId, applicationId, apiId, null, callback);
 }
 
-export function deleteUserGrantAs(userId: string, applicationId: string, apiId: string, asUserId: string, callback: ErrorCallback): void {
-    apiDelete(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, asUserId, callback);
+export function deleteUserGrantAs(userId: string, applicationId: string, apiId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`grants/${userId}/applications/${applicationId}/apis/${apiId}`, asUserId, callback);
 }
 
 // ======= CORRELATION ID HANDLER =======

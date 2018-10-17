@@ -73,12 +73,22 @@ interface RequestBody {
 // ======= IMPLEMENTATION ======
 
 /** @hidden */
-export function _initialize(options: WickedInitOptions, callback: Callback<WickedGlobals>): void {
+export function _initialize(options: WickedInitOptions, callback?: Callback<WickedGlobals>) {
     debug('initialize()');
     if (!callback && (typeof (options) === 'function')) {
         callback = options;
         options = null;
     }
+
+    const func = _initialize;
+    if (!callback) {
+        return new Promise(function (resolve, reject) {
+            func(options, function (err, g) {
+                err ? reject(err) : resolve(g);
+            });
+        });
+    }
+
     if (options) {
         debug('options:');
         debug(options);
@@ -285,12 +295,22 @@ const DEFAULT_AWAIT_OPTIONS = {
 };
 
 /** @hidden */
-export function _awaitUrl(url: string, options: WickedAwaitOptions, callback: Callback<any>) {
+export function _awaitUrl(url: string, options: WickedAwaitOptions, callback?: Callback<any>): void | Promise<any> {
     debug('awaitUrl(): ' + url);
     if (!callback && (typeof (options) === 'function')) {
         callback = options;
         options = null;
     }
+
+    const func = _awaitUrl;
+    if (!callback) {
+        return new Promise(function (resolve, reject) {
+            func(url, options, function (err, result) {
+                err ? reject(err) : resolve(result);
+            });
+        });
+    }
+
     // Copy the settings from the defaults; otherwise we'd change them haphazardly
     const awaitOptions: WickedAwaitOptions = {
         statusCode: DEFAULT_AWAIT_OPTIONS.statusCode,
@@ -319,13 +339,23 @@ export function _awaitUrl(url: string, options: WickedAwaitOptions, callback: Ca
 }
 
 /** @hidden */
-export function _awaitKongAdapter(awaitOptions, callback) {
+export function _awaitKongAdapter(awaitOptions, callback?): void | Promise<any> {
     debug('awaitKongAdapter()');
     checkInitialized('awaitKongAdapter');
     if (!callback && (typeof (awaitOptions) === 'function')) {
         callback = awaitOptions;
         awaitOptions = null;
     }
+
+    const func = _awaitKongAdapter;
+    if (!callback) {
+        return new Promise(function (resolve, reject) {
+            func(awaitOptions, function (err, result) {
+                err ? reject(err) : resolve(result);
+            });
+        });
+    }
+
     if (awaitOptions) {
         debug('awaitOptions:');
         debug(awaitOptions);
@@ -341,9 +371,19 @@ export function _awaitKongAdapter(awaitOptions, callback) {
 }
 
 /** @hidden */
-export function _initMachineUser(serviceId: string, callback: ErrorCallback) {
+export function _initMachineUser(serviceId: string, callback?: ErrorCallback): void | Promise<any> {
     debug('initMachineUser()');
     checkInitialized('initMachineUser');
+
+    const func = _initMachineUser;
+    if (!callback) {
+        return new Promise(function (resolve, reject) {
+            func(serviceId, function (err) {
+                err ? reject(err) : resolve();
+            });
+        });
+    }
+
     retrieveOrCreateMachineUser(serviceId, (err, _) => {
         if (err)
             return callback(err);
@@ -522,7 +562,7 @@ export function _getInternalKongProxyUrl() {
     checkInitialized('getInternalKongProxyUrl');
 
     // Check if it's there, but only if the property is present
-    if (wickedStorage.globals.network && 
+    if (wickedStorage.globals.network &&
         wickedStorage.globals.network.kongProxyUrl) {
         try {
             const proxyUrl = _getInternalUrl('kongProxyUrl', 'kong', 8000);
@@ -755,54 +795,65 @@ function getText(ob) {
 export function _apiGet(urlPath, userId, scope, callback) {
     debug('apiGet(): ' + urlPath);
     checkInitialized('apiGet');
-    if (arguments.length !== 4)
+    if (arguments.length !== 4 && arguments.length !== 3)
         throw new Error('apiGet was called with wrong number of arguments');
 
-    apiAction('GET', urlPath, null, userId, scope, callback);
+    return apiAction('GET', urlPath, null, userId, scope, callback);
 }
 
 /** @hidden */
 export function _apiPost(urlPath, postBody, userId, callback) {
     debug('apiPost(): ' + urlPath);
     checkInitialized('apiPost');
-    if (arguments.length !== 4)
+    if (arguments.length !== 4 && arguments.length !== 3)
         throw new Error('apiPost was called with wrong number of arguments');
 
-    apiAction('POST', urlPath, postBody, userId, null, callback);
+    return apiAction('POST', urlPath, postBody, userId, null, callback);
 }
 
 /** @hidden */
 export function _apiPut(urlPath, putBody, userId, callback) {
     debug('apiPut(): ' + urlPath);
     checkInitialized('apiPut');
-    if (arguments.length !== 4)
+    if (arguments.length !== 4 && arguments.length !== 3)
         throw new Error('apiPut was called with wrong number of arguments');
 
-    apiAction('PUT', urlPath, putBody, userId, null, callback);
+    return apiAction('PUT', urlPath, putBody, userId, null, callback);
 }
 
 /** @hidden */
 export function _apiPatch(urlPath, patchBody, userId, callback) {
     debug('apiPatch(): ' + urlPath);
     checkInitialized('apiPatch');
-    if (arguments.length !== 4)
+    if (arguments.length !== 4 && arguments.length !== 3)
         throw new Error('apiPatch was called with wrong number of arguments');
 
-    apiAction('PATCH', urlPath, patchBody, userId, null, callback);
+    return apiAction('PATCH', urlPath, patchBody, userId, null, callback);
 }
 
 /** @hidden */
 export function _apiDelete(urlPath, userId, callback) {
     debug('apiDelete(): ' + urlPath);
     checkInitialized('apiDelete');
-    if (arguments.length !== 3)
+    if (arguments.length !== 3 && arguments.length !== 2)
         throw new Error('apiDelete was called with wrong number of arguments');
 
-    apiAction('DELETE', urlPath, null, userId, null, callback);
+    return apiAction('DELETE', urlPath, null, userId, null, callback);
 }
 
 /** @hidden */
 function apiAction(method, urlPath, actionBody, userId, scope, callback) {
+    const func = apiAction;
+
+    if (!callback) {
+        debug(`apiAction(): Promisifying ${method} ${urlPath}`);
+        return new Promise(function (resolve, reject) {
+            func(method, urlPath, actionBody, userId, scope, function (err, result) {
+                err ? reject(err) : resolve(result)
+            });
+        });
+    }
+
     debug('apiAction(' + method + '): ' + urlPath);
     if (arguments.length !== 6)
         throw new Error('apiAction called with wrong number of arguments');
@@ -945,9 +996,18 @@ export function buildUrl(base, queryParams) {
 }
 
 /** @hidden */
-export function _getSubscriptionByClientId(clientId: string, apiId: string, asUserId: string, callback: Callback<WickedSubscriptionInfo>): void {
+export function _getSubscriptionByClientId(clientId: string, apiId: string, asUserId: string, callback?: Callback<WickedSubscriptionInfo>): void | Promise<WickedSubscriptionInfo> {
     debug('getSubscriptionByClientId()');
     checkInitialized('getSubscriptionByClientId');
+
+    const func = _getSubscriptionByClientId;
+    if (!callback) {
+        return new Promise(function (resolve, reject) {
+            func(clientId, apiId, asUserId, function (err, result) {
+                err ? reject(err) : resolve(result)
+            });
+        });
+    }
 
     // Validate format of clientId
     if (!/^[a-zA-Z0-9\-]+$/.test(clientId)) {
