@@ -877,7 +877,7 @@ export function patchSubscription(appId: string, apiId: string, patchInfo: Wicke
 }
 
 export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, asUserId: string, callback?: Callback<WickedSubscription>) {
-    return apiPatch(`applications/${appId}/apis/${apiId}`, patchInfo, asUserId, callback);
+    return apiPatch(`applications/${appId}/subscriptions/${apiId}`, patchInfo, asUserId, callback);
 }
 
 // APPROVALS

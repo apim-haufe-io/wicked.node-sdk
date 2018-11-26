@@ -407,8 +407,16 @@ export interface WickedSubscription extends WickedSubscriptionCreateInfo {
     clientId?: string,
     clientSecret?: string,
     approved: boolean,
+    allowedScopesMode?: WickedSubscriptionScopeModeType,
+    allowedScopes?: string[],
     changedBy?: string,
     changedDate?: string
+}
+
+export enum WickedSubscriptionScopeModeType {
+    All = "all",
+    None = "none",
+    Select = "select"
 }
 
 export interface WickedSubscriptionPatchInfo {
