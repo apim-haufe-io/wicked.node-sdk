@@ -39,12 +39,12 @@ pushd .. > /dev/null
 
 baseDir=$(pwd)
 
-for dir in wicked.portal \
-    wicked.portal-mailer \
-    wicked.portal-chatbot \
-    wicked.portal-auth \
-    wicked.portal-kong-adapter \
-    wicked.portal-test/portal-auth \
+for dir in wicked.ui \
+    wicked.mailer \
+    wicked.chatbot \
+    wicked.auth \
+    wicked.kong-adapter \
+    wicked.test/portal-auth \
     wicked.k8s-init; do
 
     echo "INFO: Installing node-sdk into $dir"
@@ -58,10 +58,10 @@ for dir in wicked.portal \
     fi
     popd > /dev/null
 done
-# Make sure the package is in the portal-env directory as well, as it's
+# Make sure the package is in the env directory as well, as it's
 # needed when building the docker image.
-echo "INFO: Copying ${packageFile} to wicked.portal-env"
-cp -f ./wicked.node-sdk/${packageFile} ./wicked.portal-env/wicked-sdk.tgz
+echo "INFO: Copying ${packageFile} to wicked.env"
+cp -f ./wicked.node-sdk/${packageFile} ./wicked.env/wicked-sdk.tgz
 
 popd > /dev/null # ..
 popd > /dev/null # currentDir
