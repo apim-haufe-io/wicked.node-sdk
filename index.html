@@ -87,11 +87,10 @@
 				applications a lot easier.</p>
 				<h1 id="usage">Usage</h1>
 				<p>To install the SDK into your node.js application, run</p>
-				<pre><code class="lang-bash">$ npm install wicked-sdk --save --save-exact
-</code></pre>
+				<pre><code class="language-bash">$ npm install wicked-sdk --save --save-exact</code></pre>
 				<p>The common initialization of the wicked SDK is like this, creating a machine user for the component which uses the wicked SDK to enable admin
 				access to the wicked API directly from your node.js, including type declarations:</p>
-				<pre><code class="lang-javascript"><span class="hljs-keyword">const</span> <span class="hljs-keyword">async</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">'async'</span>);
+				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> <span class="hljs-keyword">async</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">'async'</span>);
 <span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
 
 <span class="hljs-keyword">const</span> wickedOptions = {
@@ -121,8 +120,7 @@
 
         <span class="hljs-comment">//</span>
     });
-});
-</code></pre>
+});</code></pre>
 				<h2 id="interface-description">Interface description</h2>
 				<h3 id="initialization-functionality">Initialization Functionality</h3>
 				<p>The <code>initialize()</code> function waits for the wicked API to be available and returns a <code>null</code> error if successful, otherwise an error message. If you want to change the way the SDK waits for the Portal API, you may supply <code>options</code> as <a href="interfaces/_interfaces_.wickedinitoptions.html">WickedInitOptions</a>.</p>
@@ -152,12 +150,43 @@
 				</ul>
 				<p>Upstream wicked functionality will pick up this header and display it in logs.</p>
 				<p><strong>Usage</strong>:</p>
-				<pre><code class="lang-javascript"><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
+				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
 <span class="hljs-keyword">const</span> app = <span class="hljs-built_in">require</span>(<span class="hljs-string">'express'</span>)();
 
 app.use(wicked.correlationIdHandler());
-<span class="hljs-comment">// ...</span>
-</code></pre>
+<span class="hljs-comment">// ...</span></code></pre>
+				<h2 id="promise-support">Promise support</h2>
+				<p>All functions which have a <code>callback?</code> parameter also support returning a promise instead of using the callback. If you do not supply the <code>callback</code> parameter, all functions will return a <code>Promise</code> instead. Unfortunately, the promises which are returned are typically untyped; if somebody knows how to support both callbacks and typed Promises in one function definition, please help me out on that. Thanks.</p>
+				<p><strong>Example</strong>:</p>
+				<pre><code><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
+
+<span class="hljs-keyword">const</span> wickedOptions = {
+    <span class="hljs-attr">userAgentName</span>: <span class="hljs-string">'your-component'</span>,
+    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">'1.0.0'</span>,
+    <span class="hljs-attr">apiMaxTries</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// optional, defaults to 10</span>
+    apiRetryDelay: <span class="hljs-number">500</span>, <span class="hljs-comment">// optional, defaults to 500</span>
+};
+
+<span class="hljs-comment">// You wouldn't do it like this, this is just an example.</span>
+(<span class="hljs-keyword">async</span> () =&gt; {
+    <span class="hljs-comment">// Init wicked SDK and register a machine user.</span>
+    <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">const</span> wickedGlobals = <span class="hljs-keyword">await</span> wicked.initialize(wickedOptions);
+        <span class="hljs-keyword">await</span> wicked.initMachineUser(<span class="hljs-string">'yourcomponent'</span>);
+    } <span class="hljs-keyword">catch</span> (err) {
+        <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Failed to initialize wicked:'</span>);
+        <span class="hljs-built_in">console</span>.error(err);
+        <span class="hljs-keyword">throw</span> err;
+    }
+
+    <span class="hljs-comment">// Remember some URLs</span>
+    app.set(<span class="hljs-string">'api_url'</span>, wicked.getInternalApiUrl());
+    ...
+
+    <span class="hljs-comment">// Now you can use wicked as you wish.</span>
+    <span class="hljs-keyword">const</span> registrationCollection = <span class="hljs-keyword">await</span> wicked.getUserRegistrations(<span class="hljs-string">'regpool'</span>, someUserId);
+    <span class="hljs-comment">// ...</span>
+})();</code></pre>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
