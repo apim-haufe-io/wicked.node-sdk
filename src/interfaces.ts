@@ -40,6 +40,8 @@ export interface WickedGlobals {
     version: number,
     title: string,
     footer: string,
+    /** This contains the NODE_ENV of the API container */
+    environment: string,
     /** Selected password strategy identifier; use wicked SDK to get a list of supported strategies */
     passwordStrategy: string,
     company: string,
