@@ -369,11 +369,18 @@ export interface WickedOwner {
     role: WickedOwnerRole
 }
 
+export enum WickedClientType {
+    Confidential = "confidential",
+    Public_SPA = "public_spa",
+    Public_Native = "public_native"
+}
+
 export interface WickedApplicationCreateInfo {
     id: string,
     name: string,
     redirectUri?: string,
     confidential?: boolean,
+    clientType?: WickedClientType
 }
 
 export interface WickedApplication extends WickedApplicationCreateInfo {
