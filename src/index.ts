@@ -62,6 +62,7 @@ import {
     ExternalUserPassResponse,
     ScopeLookupResponse,
     WickedSubscriptionScopeModeType,
+    WickedClientType,
 } from "./interfaces";
 export {
     WickedInitOptions,
@@ -118,6 +119,7 @@ export {
     ExternalUserPassResponse,
     ScopeLookupResponse,
     WickedSubscriptionScopeModeType,
+    WickedClientType,
 } from "./interfaces";
 export { WickedError } from './wicked-error';
 export {
