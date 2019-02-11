@@ -156,7 +156,7 @@
 app.use(wicked.correlationIdHandler());
 <span class="hljs-comment">// ...</span></code></pre>
 				<h2 id="promise-support">Promise support</h2>
-				<p>All functions which have a <code>callback?</code> parameter also support returning a promise instead of using the callback. If you do not supply the <code>callback</code> parameter, all functions will return a <code>Promise</code> instead. Unfortunately, the promises which are returned are typically untyped; if somebody knows how to support both callbacks and typed Promises in one function definition, please help me out on that. Thanks.</p>
+				<p>All functions have an overload which also supports returning a promise instead of using the callback. If you do not supply the <code>callback</code> parameter, all functions will return a <code>Promise</code> instead.</p>
 				<p><strong>Example</strong>:</p>
 				<pre><code><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
 
