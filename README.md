@@ -128,7 +128,7 @@ app.use(wicked.correlationIdHandler());
 
 ## Promise support
 
-All functions which have a `callback?` parameter also support returning a promise instead of using the callback. If you do not supply the `callback` parameter, all functions will return a `Promise` instead. Unfortunately, the promises which are returned are typically untyped; if somebody knows how to support both callbacks and typed Promises in one function definition, please help me out on that. Thanks.
+All functions have an overload which also supports returning a promise instead of using the callback. If you do not supply the `callback` parameter, all functions will return a `Promise` instead.
 
 **Example**:
 

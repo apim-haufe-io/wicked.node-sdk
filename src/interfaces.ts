@@ -370,8 +370,14 @@ export interface WickedOwner {
 }
 
 export enum WickedClientType {
+    /** Confidential client, i.e. a client which can keep the client secret securely stored in the backend. Typical session-based applications. */
     Confidential = "confidential",
+    /** Public, browser based client. Cannot store a secret confidentially due to lack of backend server component. Typically a single page application.
+     * When using the OAuth2 Authorization Code Grant, PKCE is required, and wicked will **not** return a refresh token. */
     Public_SPA = "public_spa",
+    /** Public, e.g. native or mobile application. Cannot store a secret confidentially, but can keep runtime data reasonably secure. 
+     * When using the OAuth2 Authorization Code Grant, PKCE is required, but in distinction to the `public_spa` client type, a refresh token
+     * **is issued**. */
     Public_Native = "public_native"
 }
 
@@ -379,6 +385,7 @@ export interface WickedApplicationCreateInfo {
     id: string,
     name: string,
     redirectUri?: string,
+    /** Deprecated; use `clientType` instead. */
     confidential?: boolean,
     clientType?: WickedClientType
 }
@@ -393,9 +400,9 @@ export enum WickedAuthType {
 }
 
 export enum WickedApplicationRoleType {
-    Admin = 'admin',
-    Collaborator = 'collaborator',
-    Reader = 'reader'
+    Admin = "admin",
+    Collaborator = "collaborator",
+    Reader = "reader"
 }
 
 export interface WickedApplicationRole {

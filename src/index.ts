@@ -782,7 +782,9 @@ export function getApplicationsAs(options: WickedGetCollectionOptions, asUserId:
 }
 
 /**
- * Creates a new wicked application based on the given information.
+ * Creates a new wicked application based on the given information. Please note that the `clientType` takes precedence over
+ * the `confidential` property. Using only `clientType` is recommended. If none is passed in, `clientType` defaults to `public_spa`, 
+ * which is the least secure option.
  * 
  * @param appCreateInfo Application information for new application
  * @param callback 
@@ -829,7 +831,7 @@ export function getApplicationAs(appId: string, asUserId: string, callback?: Cal
 }
 
 /**
- * Patch an application, e.g. change it's name or redirect URL, or whether it's confidential or not.
+ * Patch an application, e.g. change it's name, redirect URL or `clientType`.
  * 
  * @param appId ID of application to patch
  * @param appPatchInfo Patch body
