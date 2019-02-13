@@ -208,6 +208,7 @@ export interface WickedGlobalsNetwork {
     portalUrl: string,
     kongAdapterUrl: string,
     kongAdminUrl: string,
+    kongProxyUrl?: string,
     mailerUrl: string,
     chatbotUrl: string
 }
