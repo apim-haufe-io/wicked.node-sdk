@@ -198,8 +198,8 @@ export function validateOptions(options) {
         !/^[a-zA-Z\ \-\_\.0-9]+$/.test(options.userAgentName))
         return new Error('The userAgentName must only contain characters a-z, A-Z, 0-9, -, _ and space.');
     if (options.userAgentVersion &&
-        semver.valid(options.userAgentVersion) !== null)
-        return new Error('The userAgentVersion must be a valid semver (see http://semver.org)');
+        semver.valid(options.userAgentVersion) == null)
+        return new Error(`The userAgentVersion ${options.userAgentVersion} is not a valid semver (see http://semver.org)`);
     return null;
 }
 
