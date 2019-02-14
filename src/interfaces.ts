@@ -25,7 +25,7 @@ export interface WickedAwaitOptions {
 export interface WickedInitOptions extends WickedAwaitOptions {
     /** A user agent name; do not use the `wicked` prefix, otherwise a strict version check is enforced. */
     userAgentName: string,
-    /** The version of your user agent. */
+    /** The version of your user agent, must be a valid SemVer (see http://semver.org). */
     userAgentVersion: string,
     /** Defaults to `false`; if `false`, the wicked SDK will poll the `/confighash` end point of the wicked API to check for updated static configuration; if such is detected, the SDK will force quit the component to make the assumed orchestrator restart it. */
     doNotPollConfigHash?: boolean,

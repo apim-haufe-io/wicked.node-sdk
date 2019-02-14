@@ -4,6 +4,7 @@ import { WickedInitOptions, Callback, WickedGlobals, WickedGetOptions, WickedGet
 import { WickedError } from "./wicked-error";
 
 import * as async from 'async';
+import * as semver from 'semver';
 
 /** @hidden */
 const os = require('os');
@@ -197,8 +198,8 @@ export function validateOptions(options) {
         !/^[a-zA-Z\ \-\_\.0-9]+$/.test(options.userAgentName))
         return new Error('The userAgentName must only contain characters a-z, A-Z, 0-9, -, _ and space.');
     if (options.userAgentVersion &&
-        !/^[0-9\.]+$/.test(options.userAgentVersion))
-        return new Error('The userAgentVersion must only contain characters 0-9 and .');
+        semver.valid(options.userAgentVersion) !== null)
+        return new Error('The userAgentVersion must be a valid semver (see http://semver.org)');
     return null;
 }
 
