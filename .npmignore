@@ -9,3 +9,7 @@ src
 tsconfig.json
 docs
 docs-git
+Dockerfile*
+publish.sh
+Jenkinsfile
+.eslint*

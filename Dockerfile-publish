@@ -3,7 +3,7 @@ FROM node:10-alpine
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN npm install -g npm-cli-login
+RUN npm install -g npm-cli-login typescript
 COPY package.json /usr/src/app
 COPY . /usr/src/app
 
@@ -12,4 +12,4 @@ ARG NPM_PASS
 ARG NPM_EMAIL
 
 RUN echo User: $NPM_USER, Email: $NPM_EMAIL
-RUN npm-cli-login -u $NPM_USER -p $NPM_PASS -e $NPM_EMAIL && tsc && npm publish && npm logout
+RUN npm-cli-login -u $NPM_USER -p $NPM_PASS -e $NPM_EMAIL && npm install && tsc && npm publish && npm logout
