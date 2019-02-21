@@ -343,6 +343,8 @@ export interface WickedGrant {
 }
 
 export interface WickedAuthMethod {
+    /** Protected Auth Methods aren't displayed in the UI (only for admins) */
+    protected?: boolean,
     enabled: string,
     name: string,
     type: string,
