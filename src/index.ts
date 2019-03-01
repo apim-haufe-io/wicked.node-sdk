@@ -1677,7 +1677,7 @@ export function correlationIdHandler(): ExpressHandler {
             req.correlationId = uuid.v4();
             debug('Creating a new correlation id: ' + req.correlationId);
         }
-        implementation.wickedStorage.correlationId = correlationId;
+        implementation.requestRuntime.correlationId = correlationId;
         return next();
     };
 }

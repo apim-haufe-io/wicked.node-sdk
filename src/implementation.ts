@@ -28,19 +28,13 @@ const TRYGET_TIMEOUT = 5000; // request timeout for single calls in awaitUrl
 
 // ====== VARIABLES ======
 
-/**
- *  Use this for local caching of things. Usually just the globals.
-* The apiUrl will - after initialization - contain the URL which
-* was used to access the portal API with. 
-* @hidden
-*/
-export const wickedStorage = {
+/** @hidden */
+const EMPTY_STORAGE = {
     initialized: false,
     kongAdapterInitialized: false,
     machineUserId: null,
     apiUrl: null,
     globals: null,
-    correlationId: null,
     configHash: null,
     userAgent: null,
     pendingExit: false,
@@ -53,6 +47,22 @@ export const wickedStorage = {
     portalApiScope: null,
     apiMaxTries: 10,
     apiRetryDelay: 500
+};
+
+/**
+ * Use this for local caching of things. Usually just the globals.
+ * The apiUrl will - after initialization - contain the URL which
+ * was used to access the portal API with. 
+ * @hidden
+ */
+let wickedStorage = _clone(EMPTY_STORAGE);
+
+/**
+ * This is used for passing the correlation ID from the correlation handler.
+ * @hidden
+ */
+export const requestRuntime = {
+    correlationId: null
 };
 
 // ====================
@@ -89,6 +99,9 @@ export function _initialize(options: WickedInitOptions, callback?: Callback<Wick
             });
         });
     }
+
+    // Reset the storage when (re-)initializing
+    wickedStorage = _clone(EMPTY_STORAGE);
 
     if (options) {
         debug('options:');
@@ -187,6 +200,11 @@ export function _initialize(options: WickedInitOptions, callback?: Callback<Wick
             });
         });
     });
+}
+
+/** @hidden */
+function _clone(o) {
+    return JSON.parse(JSON.stringify(o));
 }
 
 /** @hidden */
@@ -913,9 +931,9 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
     if (wickedStorage.isV100OrHigher) {
         reqInfo.headers['X-Authenticated-Scope'] = scope;
     }
-    if (wickedStorage.correlationId) {
-        debug('Using correlation id: ' + wickedStorage.correlationId);
-        reqInfo.headers['Correlation-Id'] = wickedStorage.correlationId;
+    if (requestRuntime.correlationId) {
+        debug('Using correlation id: ' + requestRuntime.correlationId);
+        reqInfo.headers['Correlation-Id'] = requestRuntime.correlationId;
     }
     if (wickedStorage.userAgent) {
         debug('Using User-Agent: ' + wickedStorage.userAgent);
