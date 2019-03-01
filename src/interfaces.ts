@@ -387,7 +387,10 @@ export enum WickedClientType {
 export interface WickedApplicationCreateInfo {
     id: string,
     name: string,
+    /** Pass in either `redirectUri` or `redirectUris`; the latter is recommended for support of multiple redirect URIs. */
     redirectUri?: string,
+    /** Pass in either `redirectUri` or `redirectUris`; the latter is recommended for support of multiple redirect URIs. */
+    redirectUris?: string[],
     /** Deprecated; use `clientType` instead. */
     confidential?: boolean,
     clientType?: WickedClientType
