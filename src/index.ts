@@ -988,7 +988,7 @@ export function getSubscriptionAs(appId: string, apiId: string, asUserId: string
 }
 
 /**
- * Patch a subscriptions. This function is only used for approval workflows: Use this
+ * Patch a subscription. This function is only used for approval workflows: Use this
  * to patch the subscription to be approved.
  * 
  * @param appId ID of application of which to patch the subscription
@@ -1006,6 +1006,24 @@ export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: Wic
 export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, asUserId: string, callback: Callback<WickedSubscription>);
 export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, asUserId: string, callback?: Callback<WickedSubscription>) {
     return apiPatch(`applications/${appId}/subscriptions/${apiId}`, patchInfo, asUserId, callback);
+}
+
+/**
+ * Deletes a subscription to an API for an application.
+ * 
+ * @param appId ID of application to delete the subscription for
+ * @param apiId ID of API to delete subscription for
+ */
+export function deleteSubscription(appId: string, apiId: string): Promise<any>;
+export function deleteSubscription(appId: string, apiId: string, callback: ErrorCallback);
+export function deleteSubscription(appId: string, apiId: string, callback?: ErrorCallback) {
+    return deleteSubscriptionAs(appId, apiId, null, callback);
+}
+
+export function deleteSubscriptionAs(appId: string, apiId: string, asUserId: string): Promise<any>;
+export function deleteSubscriptionAs(appId: string, apiId: string, asUserId: string, callback: ErrorCallback);
+export function deleteSubscriptionAs(appId: string, apiId: string, asUserId: string, callback?: ErrorCallback) {
+    return apiDelete(`applications/${appId}/subscriptions/${apiId}`, asUserId, callback);
 }
 
 // APPROVALS
