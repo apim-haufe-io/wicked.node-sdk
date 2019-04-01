@@ -881,8 +881,9 @@ function apiAction(method, urlPath, actionBody, userId, scope, callback) {
 
     if (!wickedStorage.apiReachable)
         return callback(new Error('The wicked API is currently not reachable. Try again later.'));
-    if (wickedStorage.pendingExit)
-        return callback(new Error('A shutdown due to changed configuration is pending.'));
+    // This is not needed anymore: The API accepts the current and the previous config hash now.
+    // if (wickedStorage.pendingExit)
+    //     return callback(new Error('A shutdown due to changed configuration is pending.'));
 
     if (!scope) {
         if (wickedStorage.portalApiScope)
