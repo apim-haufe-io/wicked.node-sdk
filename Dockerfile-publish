@@ -1,5 +1,6 @@
 FROM node:10-alpine
 
+RUN apk update && apk add jq
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
