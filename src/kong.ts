@@ -32,6 +32,20 @@ function deducePort(url: URL): number {
 }
 
 /** @hidden */
+function normalizeInteger(n: any): number {
+    if ( n ) {
+      try {
+          return parseInt(n);
+      } catch (err) {
+          console.warn(`normalizeInteger(): Could not parse integer: ${n}`);
+          console.warn(err);
+      }
+    }
+
+    return null;
+}
+
+/** @hidden */
 function deducePath(url: URL): string {
     if (url.pathname)
         return url.pathname;
@@ -50,17 +64,22 @@ function deduceProtocol(url: URL): ProtocolType {
 
 /** @hidden */
 function translateProtocols(proto: string[]): ProtocolType[] {
-    var protocols: ProtocolType[];
+    var protocols: ProtocolType[] = [];
 
-    for (let p of proto) {
-       let t  = ProtocolType[p.toLowerCase()];
+    if( proto ) {
+      for (let p of proto) {
+         let t  = ProtocolType[p.toLowerCase()];
 
-       if( t ) {
-           protocols.push( t );
-       }
+         if( t ) {
+             protocols.push( t );
+         }
+      }
+    }
+    else {
+        protocols.push( ProtocolType.http, ProtocolType.https );
     }
 
-    return protocols;
+    return protocols.length ? protocols : null;
 }
 
 // Service+Routes <-> API, this will produce multi-routes as configured
@@ -79,25 +98,39 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
         host: upstreamUrl.hostname,
         port: deducePort(upstreamUrl),
         path: deducePath(upstreamUrl),
-        name: api.name,
-        retries: api.retries,
-        connect_timeout: api.upstream_connect_timeout,
-        read_timeout: api.upstream_read_timeout,
-        write_timeout: api.upstream_send_timeout,
+        name: api.name
     }
 
-    var routes: KongRoute[];
+    let retries = normalizeInteger(api.retries);
+    let connect = normalizeInteger(api.upstream_connect_timeout);
+    let read = normalizeInteger(api.upstream_read_timeout);
+    let write = normalizeInteger(api.upstream_send_timeout);
+
+    if (retries) {
+        service.retries = retries;
+    }
+
+    if (connect) {
+        service.connect_timeout = connect;
+    }
+
+    if (read) {
+        service.read_timeout = read;
+    }
+
+    if (write) {
+        service.write_timeout = write;
+    }
+
+    var routes: KongRoute[] = [];
 
     //correct, expectd format
     if( api.routes && api.routes.length ) {
-        for (var i = 0; api.routes.length > i; i++) {
-            const item: KongRoute = api.routes[i];
+        for (var i = 0; i < api.routes.length; i++) {
+            const item = api.routes[i];
 
             const route: KongRoute = {
-                hosts: item.hosts,
                 protocols: translateProtocols(item.protocols),
-                paths: item.hosts,
-                methods: item.methods,
                 regex_priority: 0,
                 strip_path: item.strip_path,
                 preserve_host: item.preserve_host,
@@ -105,6 +138,18 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
                     id: api.id
                 }
             };
+
+            if ( item.hosts && item.hosts.length ) {
+                route.hosts = item.hosts;
+            }
+
+            if ( item.paths && item.paths.length ) {
+                route.paths = item.paths;
+            }
+
+            if ( item.methods && item.methods.length ) {
+                route.methods = item.methods;
+            }
 
             routes.push(route);
         }
