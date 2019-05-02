@@ -102,9 +102,9 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
     }
 
     let retries = normalizeInteger(api.retries);
-    let connect = normalizeInteger(api.upstream_connect_timeout);
-    let read = normalizeInteger(api.upstream_read_timeout);
-    let write = normalizeInteger(api.upstream_send_timeout);
+    let connect = normalizeInteger(api.connect_timeout);
+    let read = normalizeInteger(api.read_timeout);
+    let write = normalizeInteger(api.write_timeout);
 
     if (retries) {
         service.retries = retries;
@@ -199,9 +199,9 @@ export function kongApiToServiceRoute(api: KongApi): { service: KongService, rou
         path: deducePath(upstreamUrl),
         name: api.name,
         retries: api.retries,
-        connect_timeout: api.upstream_connect_timeout,
-        read_timeout: api.upstream_read_timeout,
-        write_timeout: api.upstream_send_timeout,
+        connect_timeout: api.connect_timeout,
+        read_timeout: api.read_timeout,
+        write_timeout: api.write_timeout,
     }
     const route: KongRoute = {
         hosts: null,
@@ -237,9 +237,9 @@ export function kongServiceAndRoutesToApi(service: KongService, routes: KongRout
         upstream_url: upstreamUrl.toString(),
         routes: routes,
         retries: service.retries,
-        upstream_connect_timeout: service.connect_timeout,
-        upstream_read_timeout: service.read_timeout,
-        upstream_send_timeout: service.write_timeout
+        connect_timeout: service.connect_timeout,
+        read_timeout: service.read_timeout,
+        write_timeout: service.write_timeout
     };
 }
 
@@ -264,8 +264,8 @@ export function kongServiceRouteToApi(service: KongService, route: KongRoute): K
         strip_uri: route.strip_path,
         preserve_host: route.preserve_host,
         retries: service.retries,
-        upstream_connect_timeout: service.connect_timeout,
-        upstream_read_timeout: service.read_timeout,
-        upstream_send_timeout: service.write_timeout
+        connect_timeout: service.connect_timeout,
+        read_timeout: service.read_timeout,
+        write_timeout: service.write_timeout
     };
 }

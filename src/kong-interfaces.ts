@@ -16,9 +16,9 @@ export interface KongApi {
     retries?: number,
     strip_uri?: boolean,
     hide_credentials?: boolean,
-    upstream_connect_timeout?: number,
-    upstream_read_timeout?: number,
-    upstream_send_timeout?: number,
+    connect_timeout?: number,
+    read_timeout?: number,
+    write_timeout?: number,
     upstream_url: string,
     routes?: KongRoute[]
 }
