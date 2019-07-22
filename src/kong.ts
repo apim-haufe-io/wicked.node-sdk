@@ -33,7 +33,7 @@ function deducePort(url: URL): number {
 
 /** @hidden */
 function normalizeInteger(n: any): number {
-    if ( n ) {
+    if (n) {
       try {
           return parseInt(n);
       } catch (err) {
@@ -66,16 +66,15 @@ function deduceProtocol(url: URL): ProtocolType {
 function translateProtocols(proto: string[]): ProtocolType[] {
     var protocols: ProtocolType[] = [];
 
-    if( proto ) {
+    if (proto) {
       for (let p of proto) {
          let t  = ProtocolType[p.toLowerCase()];
 
-         if( t ) {
+         if (t) {
              protocols.push( t );
          }
       }
-    }
-    else {
+    } else {
         protocols.push( ProtocolType.http, ProtocolType.https );
     }
 
@@ -125,7 +124,7 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
     var routes: KongRoute[] = [];
 
     //correct, expectd format
-    if( api.routes && api.routes.length ) {
+    if (api.routes && api.routes.length) {
         for (var i = 0; i < api.routes.length; i++) {
             const item = api.routes[i];
 
@@ -139,15 +138,15 @@ export function kongApiToServiceAndRoutes(api: KongApi): { service: KongService,
                 }
             };
 
-            if ( item.hosts && item.hosts.length ) {
+            if (item.hosts && item.hosts.length) {
                 route.hosts = item.hosts;
             }
 
-            if ( item.paths && item.paths.length ) {
+            if (item.paths && item.paths.length) {
                 route.paths = item.paths;
             }
 
-            if ( item.methods && item.methods.length ) {
+            if (item.methods && item.methods.length) {
                 route.methods = item.methods;
             }
 
