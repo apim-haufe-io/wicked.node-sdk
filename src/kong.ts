@@ -66,7 +66,7 @@ function deduceProtocol(url: URL): ProtocolType {
 function translateProtocols(proto: string[]): ProtocolType[] {
     var protocols: ProtocolType[] = [];
 
-    if (proto) {
+    if (proto && proto.length) {
       for (let p of proto) {
          let t  = ProtocolType[p.toLowerCase()];
 
