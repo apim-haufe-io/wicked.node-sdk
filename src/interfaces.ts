@@ -720,6 +720,8 @@ export interface ExpressHandler {
 export interface PassthroughScopeRequest {
     /** If `scope` was passed to the authorize request, the scope is passed on upstream by the Authorization Server. Otherwise `null` or not present. */
     scope?: string[],
+    /** The ID of the auth method which is being used for this current request for authorization (new in 1.0.0-rc.8). */
+    auth_method: string,
     /** 
      * The OpenID Connect compatible profile of the authenticated user. You will find a unique ID in the `sub` property, 
      * plus other properties, depending on the type of identity provider which was used.
