@@ -148,7 +148,9 @@ export {
 } from './kong-interfaces';
 export {
     kongServiceRouteToApi,
-    kongApiToServiceRoute
+    kongApiToServiceRoute,
+    kongApiToServiceAndRoutes,
+    kongServiceAndRoutesToApi
 } from './kong';
 
 
@@ -159,8 +161,8 @@ import * as implementation from './implementation';
 
 /**
  * Initialize the wicked node SDK.
- * 
- * @param options SDK global options 
+ *
+ * @param options SDK global options
  * @param callback Returns an error or the content of the `globals.json` file (as second argument)
  */
 export function initialize(options: WickedInitOptions): Promise<WickedGlobals>;
@@ -188,7 +190,7 @@ export function isDevelopmentMode(): boolean {
  * Create a machine administrator user for a given service. This method can be used to get "backdoor"
  * access to the wicked API on behalf of a machine user. If you call this method, the machine user ID
  * will be stored internally in the SDK and will be used for any API calls using the SDK.
- * 
+ *
  * @param serviceId A unique service ID for the service to create a machine user for
  * @param callback Returns `null` if succeeded, or an error.
  */
@@ -200,7 +202,7 @@ export function initMachineUser(serviceId: string, callback?: ErrorCallback) {
 
 /**
  * Awaits return code `200` for the specified URL.
- * 
+ *
  * @param url The URL to wait for to return `200`
  * @param options Await options (see interface)
  * @param callback Returns `null` plus the returned content of the URL, or an error
@@ -213,7 +215,7 @@ export function awaitUrl(url: string, options: WickedAwaitOptions, callback?: Ca
 
 /**
  * Convenience function to make sure the Kong Adapter is up and running.
- * 
+ *
  * @param awaitOptions Await options
  * @param callback Returns `null` plus the returned content of the URL, or an error
  */
@@ -243,7 +245,7 @@ export function getConfigHash(): string {
 
 /**
  * Return the currently configured user facing schema (`http` or `https`). This information is contained
- * in the `globals.json`. 
+ * in the `globals.json`.
  */
 export function getSchema(): string {
     return implementation._getSchema();
@@ -363,7 +365,7 @@ export function getPasswordStrategy(): string {
 /**
  * General purpose `GET` operation on the wicked API; you do not use this directly usually, but use one of
  * the dedicated SDK functions.
- * 
+ *
  * @param urlPath relative URL path
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
@@ -380,7 +382,7 @@ export function apiGet(urlPath: string, userIdOrCallback, callback) {
 /**
  * General purpose `POST` operation on the wicked API; you do not use this directly usually, but use one of
  * the dedicated SDK functions.
- * 
+ *
  * @param urlPath relative URL path
  * @param postBody Body to post
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
@@ -398,7 +400,7 @@ export function apiPost(urlPath: string, postBody: object, userIdOrCallback, cal
 /**
  * General purpose `PUT` operation on the wicked API; you do not use this directly usually, but use one of
  * the dedicated SDK functions.
- * 
+ *
  * @param urlPath relative URL path
  * @param putBody Body to post
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
@@ -416,7 +418,7 @@ export function apiPut(urlPath: string, putBody: object, userIdOrCallback, callb
 /**
  * General purpose `PATCH` operation on the wicked API; you do not use this directly usually, but use one of
  * the dedicated SDK functions.
- * 
+ *
  * @param urlPath relative URL path
  * @param putBody Body to patch
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
@@ -434,7 +436,7 @@ export function apiPatch(urlPath: string, patchBody: object, userIdOrCallback, c
 /**
  * General purpose `DELETE` operation on the wicked API; you do not use this directly usually, but use one of
  * the dedicated SDK functions.
- * 
+ *
  * @param urlPath relative URL path
  * @param userIdOrCallback user ID to perform the `GET` operation as, or `callback`
  * @param callback Callback containing an `err` (or `null` if success) and the `GET` returned content.
@@ -454,7 +456,7 @@ export function apiDelete(urlPath: string, userIdOrCallback, callback) {
 
 /**
  * Returns a collection of API definitions (corresponds to the `apis.json`).
- * @param callback 
+ * @param callback
  * @category APIs
  */
 export function getApis(): Promise<WickedApiCollection>;
@@ -471,7 +473,7 @@ export function getApisAs(asUserId: string, callback?: Callback<WickedApiCollect
 
 /**
  * Return the generic APIs description (for all APIs). Returns markdown code.
- * @param callback 
+ * @param callback
  */
 export function getApisDescription(): Promise<string>;
 export function getApisDescription(callback: Callback<string>);
@@ -487,9 +489,9 @@ export function getApisDescriptionAs(asUserId: string, callback?: Callback<strin
 
 /**
  * Returns the API definition for a specific API.
- * 
+ *
  * @param apiId The id of the API to retrieve
- * @param callback 
+ * @param callback
  */
 export function getApi(apiId: string): Promise<WickedApi>;
 export function getApi(apiId: string, callback: Callback<WickedApi>);
@@ -505,9 +507,9 @@ export function getApiAs(apiId: string, asUserId: string, callback?: Callback<Wi
 
 /**
  * Retrieve the (markdown) API description of a specific API.
- * 
+ *
  * @param apiId The id of the API to retrieve the description for
- * @param callback 
+ * @param callback
  */
 export function getApiDescription(apiId: string): Promise<string>;
 export function getApiDescription(apiId: string, callback: Callback<string>);
@@ -523,9 +525,9 @@ export function getApiDescriptionAs(apiId: string, asUserId: string, callback?: 
 
 /**
  * Retrieve the API specific Kong configuration for a specific API.
- * 
+ *
  * @param apiId The id of the API to retrieve the Kong config for
- * @param callback 
+ * @param callback
  */
 export function getApiConfig(apiId: string): Promise<any>;
 export function getApiConfig(apiId: string, callback: Callback<any>);
@@ -541,9 +543,9 @@ export function getApiConfigAs(apiId: string, asUserId: string, callback?: Callb
 
 /**
  * Retrieve a JSON representation of the Swagger information for a specific API; contains authorization information (injected).
- * 
+ *
  * @param apiId The id of the API to retrieve the Swagger JSON for
- * @param callback 
+ * @param callback
  */
 export function getApiSwagger(apiId: string): Promise<object>;
 export function getApiSwagger(apiId: string, callback: Callback<object>);
@@ -559,9 +561,9 @@ export function getApiSwaggerAs(apiId: string, asUserId: string, callback?: Call
 
 /**
  * Retrieve a list of subscriptions to a specific API.
- * 
+ *
  * @param apiId The id of the API to retrieve subscriptions for.
- * @param callback 
+ * @param callback
  */
 export function getApiSubscriptions(apiId: string): Promise<WickedCollection<WickedSubscription>>;
 export function getApiSubscriptions(apiId: string, callback: Callback<WickedCollection<WickedSubscription>>);
@@ -579,9 +581,9 @@ export function getApiSubscriptionsAs(apiId: string, asUserId: string, callback?
 
 /**
  * Retrieve a list of API Plans for a specific API.
- * 
+ *
  * @param apiId The id of the API to retrieve the associated plans for
- * @param callback 
+ * @param callback
  */
 export function getApiPlans(apiId: string): Promise<WickedApiPlan[]>;
 export function getApiPlans(apiId: string, callback: Callback<WickedApiPlan[]>);
@@ -598,7 +600,7 @@ export function getApiPlansAs(apiId: string, asUserId: string, callback?: Callba
 /**
  * Return a collection of all API plans, disregarding their association with APIs or not. This is an open
  * endpoint, so there is no `As` alternative.
- * @param callback 
+ * @param callback
  */
 export function getPlans(): Promise<WickedApiPlanCollection>;
 export function getPlans(callback: Callback<WickedApiPlanCollection>);
@@ -611,7 +613,7 @@ export function getPlans(callback?: Callback<WickedApiPlanCollection>) {
 /**
  * Retrieve a collection of all wicked user groups. This is an open
  * endpoint, so there is no `As` alternative.
- * @param callback 
+ * @param callback
  */
 export function getGroups(): Promise<WickedGroupCollection>;
 export function getGroups(callback: Callback<WickedGroupCollection>);
@@ -623,9 +625,9 @@ export function getGroups(callback?: Callback<WickedGroupCollection>) {
 
 /**
  * Retrieves user short info by custom id.
- * 
+ *
  * @param customId The custom id of the user to retrieve
- * @param callback 
+ * @param callback
  */
 export function getUserByCustomId(customId: string): Promise<WickedUserShortInfo[]>;
 export function getUserByCustomId(customId: string, callback: Callback<WickedUserShortInfo[]>);
@@ -635,9 +637,9 @@ export function getUserByCustomId(customId: string, callback?: Callback<WickedUs
 
 /**
  * Retrieves user short info by email address.
- * 
+ *
  * @param email The email address of the user to retrieve
- * @param callback 
+ * @param callback
  */
 export function getUserByEmail(email: string): Promise<WickedUserShortInfo[]>;
 export function getUserByEmail(email: string, callback: Callback<WickedUserShortInfo[]>);
@@ -648,9 +650,9 @@ export function getUserByEmail(email: string, callback?: Callback<WickedUserShor
 /**
  * Retrieve list of users matching the given options. Chances are good you will rather want to use
  * getRegistrations().
- * 
+ *
  * @param options Collection get options
- * @param callback 
+ * @param callback
  */
 export function getUsers(options: WickedGetOptions): Promise<WickedUserShortInfo[]>;
 export function getUsers(options: WickedGetOptions, callback: Callback<WickedUserShortInfo[]>);
@@ -669,9 +671,9 @@ export function getUsersAs(options: WickedGetOptions, asUserId: string, callback
 /**
  * Creates a new user from the given information. Returns a user information object also containing
  * the new internal ID of the user.
- * 
+ *
  * @param userCreateInfo The basic user info needed to create a user
- * @param callback 
+ * @param callback
  */
 export function createUser(userCreateInfo: WickedUserCreateInfo): Promise<WickedUserInfo>;
 export function createUser(userCreateInfo: WickedUserCreateInfo, callback: Callback<WickedUserInfo>);
@@ -687,7 +689,7 @@ export function createUserAs(userCreateInfo: WickedUserCreateInfo, asUserId: str
 
 /**
  * Patches a user. Returns the updated user information.
- * 
+ *
  * @param userPatchInfo The information of the user to update (password, groups...)
  * @param callback
  */
@@ -706,9 +708,9 @@ export function patchUserAs(userId: string, userPatchInfo: WickedUserCreateInfo,
 /**
  * Deletes a user. This function will only succeed if the user does not have any associated applications.
  * If the user has applications, these have to be deleted or re-owned first.
- * 
+ *
  * @param userId ID of user to delete
- * @param callback 
+ * @param callback
  */
 export function deleteUser(userId: string): Promise<any>;
 export function deleteUser(userId: string, callback: ErrorCallback);
@@ -724,9 +726,9 @@ export function deleteUserAs(userId: string, asUserId: string, callback?: ErrorC
 
 /**
  * Retrieves user information for a specific user.
- * 
+ *
  * @param userId ID of user to retrieve
- * @param callback 
+ * @param callback
  */
 export function getUser(userId: string): Promise<WickedUserInfo>;
 export function getUser(userId: string, callback: Callback<WickedUserInfo>): void;
@@ -743,9 +745,9 @@ export function getUserAs(userId: string, asUserId: string, callback?: Callback<
 /**
  * Special function which deletes the password for a specific user; this user will no longer be able to
  * log in using username and password anymore.
- * 
+ *
  * @param userId ID of user to delete password for.
- * @param callback 
+ * @param callback
  */
 export function deleteUserPassword(userId: string): Promise<any>;
 export function deleteUserPassword(userId: string, callback: ErrorCallback);
@@ -763,9 +765,9 @@ export function deleteUserPasswordAs(userId: string, asUserId: string, callback?
 
 /**
  * Retrieves all registered wicked applications.
- * 
+ *
  * @param options Get options (filtering, paging)
- * @param callback 
+ * @param callback
  */
 export function getApplications(options: WickedGetCollectionOptions): Promise<WickedCollection<WickedApplication>>;
 export function getApplications(options: WickedGetCollectionOptions, callback: Callback<WickedCollection<WickedApplication>>);
@@ -783,11 +785,11 @@ export function getApplicationsAs(options: WickedGetCollectionOptions, asUserId:
 
 /**
  * Creates a new wicked application based on the given information. Please note that the `clientType` takes precedence over
- * the `confidential` property. Using only `clientType` is recommended. If none is passed in, `clientType` defaults to `public_spa`, 
+ * the `confidential` property. Using only `clientType` is recommended. If none is passed in, `clientType` defaults to `public_spa`,
  * which is the least secure option.
- * 
+ *
  * @param appCreateInfo Application information for new application
- * @param callback 
+ * @param callback
  */
 export function createApplication(appCreateInfo: WickedApplicationCreateInfo): Promise<WickedApplication>;
 export function createApplication(appCreateInfo: WickedApplicationCreateInfo, callback: Callback<WickedApplication>);
@@ -803,8 +805,8 @@ export function createApplicationAs(appCreateInfo: WickedApplicationCreateInfo, 
 
 /**
  * Retrieves the list of (predefined) application roles.
- * 
- * @param callback 
+ *
+ * @param callback
  */
 export function getApplicationRoles(): Promise<WickedApplicationRole[]>;
 export function getApplicationRoles(callback: Callback<WickedApplicationRole[]>);
@@ -814,9 +816,9 @@ export function getApplicationRoles(callback?: Callback<WickedApplicationRole[]>
 
 /**
  * Retrieve information on the given application.
- * 
+ *
  * @param appId ID of application to retrieve
- * @param callback 
+ * @param callback
  */
 export function getApplication(appId: string): Promise<WickedApplication>;
 export function getApplication(appId: string, callback: Callback<WickedApplication>);
@@ -832,10 +834,10 @@ export function getApplicationAs(appId: string, asUserId: string, callback?: Cal
 
 /**
  * Patch an application, e.g. change it's name, redirect URL or `clientType`.
- * 
+ *
  * @param appId ID of application to patch
  * @param appPatchInfo Patch body
- * @param callback 
+ * @param callback
  */
 export function patchApplication(appId: string, appPatchInfo: WickedApplicationCreateInfo): Promise<WickedApplication>;
 export function patchApplication(appId: string, appPatchInfo: WickedApplicationCreateInfo, callback: Callback<WickedApplication>);
@@ -851,9 +853,9 @@ export function patchApplicationAs(appId: string, appPatchInfo: WickedApplicatio
 
 /**
  * Delete an application entirely.
- * 
+ *
  * @param appId ID of application to delete
- * @param callback 
+ * @param callback
  */
 export function deleteApplication(appId: string): Promise<any>;
 export function deleteApplication(appId: string, callback: ErrorCallback);
@@ -869,11 +871,11 @@ export function deleteApplicationAs(appId: string, asUserId: string, callback?: 
 
 /**
  * Add an owner to a specific application.
- * 
+ *
  * @param appId ID of application to add an owner for
  * @param email Email address of additional owner
  * @param role The role of the additional owner
- * @param callback 
+ * @param callback
  */
 export function addApplicationOwner(appId: string, email: string, role: WickedApplicationRoleType): Promise<WickedApplication>;
 export function addApplicationOwner(appId: string, email: string, role: WickedApplicationRoleType, callback: Callback<WickedApplication>);
@@ -893,10 +895,10 @@ export function addApplicationOwnerAs(appId: string, email: string, role: Wicked
 
 /**
  * Delete an owner from an application.
- * 
+ *
  * @param appId ID of application to delete the owner from
  * @param email Email address of owner to delete from application
- * @param callback 
+ * @param callback
  */
 export function deleteApplicationOwner(appId: string, email: string): Promise<WickedApplication>;
 export function deleteApplicationOwner(appId: string, email: string, callback: Callback<WickedApplication>);
@@ -914,9 +916,9 @@ export function deleteApplicationOwnerAs(appId: string, email: string, asUserId:
 
 /**
  * Retrieve all API subscriptions for a specific application.
- * 
+ *
  * @param appId ID of application to retrieve subscriptions for
- * @param callback 
+ * @param callback
  */
 export function getSubscriptions(appId: string): Promise<WickedSubscription[]>;
 export function getSubscriptions(appId: string, callback: Callback<WickedSubscription[]>);
@@ -932,10 +934,10 @@ export function getSubscriptionsAs(appId: string, asUserId: string, callback?: C
 
 /**
  * Retrieve subscription information for an application based on an OAuth2 client ID and a given API.
- * 
+ *
  * @param clientId OAuth2 client ID of application
  * @param apiId ID of API
- * @param callback 
+ * @param callback
  */
 export function getSubscriptionByClientId(clientId: string, apiId: string): Promise<WickedSubscriptionInfo>;
 export function getSubscriptionByClientId(clientId: string, apiId: string, callback: Callback<WickedSubscriptionInfo>);
@@ -951,10 +953,10 @@ export function getSubscriptionByClientIdAs(clientId: string, apiId: string, asU
 
 /**
  * Create a new API subscription for an application.
- * 
+ *
  * @param appId ID of application to create a subscription for
  * @param subsCreateInfo Subscription create info (see type)
- * @param callback 
+ * @param callback
  */
 export function createSubscription(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo): Promise<WickedSubscription>;
 export function createSubscription(appId: string, subsCreateInfo: WickedSubscriptionCreateInfo, callback: Callback<WickedSubscription>);
@@ -970,10 +972,10 @@ export function createSubscriptionAs(appId: string, subsCreateInfo: WickedSubscr
 
 /**
  * Retrieve a specific application API subscription.
- * 
+ *
  * @param appId ID of application to retrieve subscription for
  * @param apiId ID of API to which the subscription applies
- * @param callback 
+ * @param callback
  */
 export function getSubscription(appId: string, apiId: string): Promise<WickedSubscription>;
 export function getSubscription(appId: string, apiId: string, callback: Callback<WickedSubscription>);
@@ -990,11 +992,11 @@ export function getSubscriptionAs(appId: string, apiId: string, asUserId: string
 /**
  * Patch a subscription. This function is only used for approval workflows: Use this
  * to patch the subscription to be approved.
- * 
+ *
  * @param appId ID of application of which to patch the subscription
  * @param apiId ID of API
  * @param patchInfo Patch information (see type)
- * @param callback 
+ * @param callback
  */
 export function patchSubscription(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo): Promise<WickedSubscription>;
 export function patchSubscription(appId: string, apiId: string, patchInfo: WickedSubscriptionPatchInfo, callback: Callback<WickedSubscription>);
@@ -1010,7 +1012,7 @@ export function patchSubscriptionAs(appId: string, apiId: string, patchInfo: Wic
 
 /**
  * Deletes a subscription to an API for an application.
- * 
+ *
  * @param appId ID of application to delete the subscription for
  * @param apiId ID of API to delete subscription for
  */
@@ -1030,8 +1032,8 @@ export function deleteSubscriptionAs(appId: string, apiId: string, asUserId: str
 
 /**
  * Retrieve a list of all pending subscription approvals.
- * 
- * @param callback 
+ *
+ * @param callback
  */
 export function getApprovals(): Promise<WickedApproval[]>;
 export function getApprovals(callback: Callback<WickedApproval[]>);
@@ -1047,9 +1049,9 @@ export function getApprovalsAs(asUserId: string, callback?: Callback<WickedAppro
 
 /**
  * Retrieve a specific approval request by ID.
- * 
+ *
  * @param approvalId ID of approval to retrieve
- * @param callback 
+ * @param callback
  */
 export function getApproval(approvalId: string): Promise<WickedApproval>;
 export function getApproval(approvalId: string, callback: Callback<WickedApproval>);
@@ -1069,9 +1071,9 @@ export function getApprovalAs(approvalId: string, asUserId: string, callback?: C
  * Creates a verification record; depending on the type of the verification record, this may trigger
  * certain workflows, such as the "lost password" or "verify email address" workflow, given that the
  * wicked mailer is correctly configured and deployed.
- * 
+ *
  * @param verification Verification information to create a verification record for
- * @param callback 
+ * @param callback
  */
 export function createVerification(verification: WickedVerification): Promise<any>;
 export function createVerification(verification: WickedVerification, callback: ErrorCallback);
@@ -1087,8 +1089,8 @@ export function createVerificationAs(verification: WickedVerification, asUserId:
 
 /**
  * Retrieve all pending verifications.
- * 
- * @param callback 
+ *
+ * @param callback
  */
 export function getVerifications(): Promise<WickedVerification[]>;
 export function getVerifications(callback: Callback<WickedVerification[]>);
@@ -1104,9 +1106,9 @@ export function getVerificationsAs(asUserId: string, callback?: Callback<WickedV
 
 /**
  * Retrieve a specific verification by its ID.
- * 
+ *
  * @param verificationId ID of verification to retrieve.
- * @param callback 
+ * @param callback
  */
 export function getVerification(verificationId: string): Promise<WickedVerification>;
 export function getVerification(verificationId: string, callback: Callback<WickedVerification>);
@@ -1122,9 +1124,9 @@ export function getVerificationAs(verificationId: string, asUserId: string, call
 
 /**
  * Delete a verification by ID.
- * 
+ *
  * @param verificationId ID of verification to delete.
- * @param callback 
+ * @param callback
  */
 export function deleteVerification(verificationId: string): Promise<any>;
 export function deleteVerification(verificationId: string, callback: ErrorCallback);
@@ -1183,7 +1185,7 @@ export function getEmailTemplateAs(templateId: WickedEmailTemplateType, asUserId
 /**
  * Retrieve a string list of registered authorization servers. This just returns a list of names, to
  * get further information, use getAuthServer().
- * @param callback 
+ * @param callback
  */
 export function getAuthServerNames(): Promise<string[]>;
 export function getAuthServerNames(callback: Callback<string[]>);
@@ -1199,9 +1201,9 @@ export function getAuthServerNamesAs(asUserId: string, callback?: Callback<strin
 
 /**
  * Retrieve information on a specific authorization server.
- * 
+ *
  * @param serverId ID of authorization server to retrieve information on.
- * @param callback 
+ * @param callback
  */
 export function getAuthServer(serverId: string): Promise<WickedAuthServer>;
 export function getAuthServer(serverId: string, callback: Callback<WickedAuthServer>);
@@ -1219,8 +1221,8 @@ export function getAuthServerAs(serverId: string, asUserId: string, callback?: C
 
 /**
  * Retrieve a list of all currently registered webhook listeners.
- * 
- * @param callback 
+ *
+ * @param callback
  */
 export function getWebhookListeners(): Promise<WickedWebhookListener[]>;
 export function getWebhookListeners(callback: Callback<WickedWebhookListener[]>);
@@ -1239,10 +1241,10 @@ export function getWebhookListenersAs(asUserId: string, callback?: Callback<Wick
  * a new webhook listener, the wicked API will start to accumulate events for this webhook
  * listener. These events can be retrieved using `getWebhookEvents` and deleted via
  * `deleteWebhookEvents`.
- * 
+ *
  * @param listenerId ID of listener to insert or update
  * @param listener Data of listener to insert or update
- * @param callback 
+ * @param callback
  */
 export function upsertWebhookListener(listenerId: string, listener: WickedWebhookListener): Promise<any>;
 export function upsertWebhookListener(listenerId: string, listener: WickedWebhookListener, callback: ErrorCallback);
@@ -1258,9 +1260,9 @@ export function upsertWebhookListenerAs(listenerId: string, listener: WickedWebh
 
 /**
  * Delete a specific webhook listener.
- * 
+ *
  * @param listenerId ID of webhook listener to delete
- * @param callback 
+ * @param callback
  */
 export function deleteWebhookListener(listenerId: string): Promise<any>;
 export function deleteWebhookListener(listenerId: string, callback: ErrorCallback);
@@ -1277,9 +1279,9 @@ export function deleteWebhookListenerAs(listenerId: string, asUserId: string, ca
 /**
  * Retrieve all pending webhook events for a specific webhook listener. This operation is idempotent.
  * To delete the webhook events, subsequently call deleteWebhookEvent.
- * 
+ *
  * @param listenerId ID of webhook listener to retrieve pending events for
- * @param callback 
+ * @param callback
  */
 export function getWebhookEvents(listenerId: string): Promise<WickedEvent[]>;
 export function getWebhookEvents(listenerId: string, callback: Callback<WickedEvent[]>);
@@ -1295,9 +1297,9 @@ export function getWebhookEventsAs(listenerId: string, asUserId: string, callbac
 
 /**
  * Flush/delete all pending webhook events for a specific webhook listener.
- * 
+ *
  * @param listenerId ID of webhook listener to flush all events for.
- * @param callback 
+ * @param callback
  */
 export function flushWebhookEvents(listenerId: string): Promise<any>;
 export function flushWebhookEvents(listenerId: string, callback: ErrorCallback);
@@ -1313,10 +1315,10 @@ export function flushWebhookEventsAs(listenerId: string, asUserId: string, callb
 
 /**
  * Delete a specific webhook event for a specific webhook listener from the event queue.
- * 
+ *
  * @param listenerId ID of webhook listener to delete an event for
  * @param eventId ID of event to delete
- * @param callback 
+ * @param callback
  */
 export function deleteWebhookEvent(listenerId: string, eventId: string): Promise<any>;
 export function deleteWebhookEvent(listenerId: string, eventId: string, callback: ErrorCallback);
@@ -1334,8 +1336,8 @@ export function deleteWebhookEventAs(listenerId: string, eventId: string, asUser
 
 /**
  * Retrieve a map of registration pools and registration pool information.
- * 
- * @param callback 
+ *
+ * @param callback
  */
 export function getRegistrationPools(): Promise<WickedPoolMap>;
 export function getRegistrationPools(callback: Callback<WickedPoolMap>);
@@ -1351,9 +1353,9 @@ export function getRegistrationPoolsAs(asUserId: string, callback?: Callback<Wic
 
 /**
  * Retrieve information on a specific registration pool.
- * 
+ *
  * @param poolId ID of pool to retrieve information on
- * @param callback 
+ * @param callback
  */
 export function getRegistrationPool(poolId: string): Promise<WickedPool>;
 export function getRegistrationPool(poolId: string, callback: Callback<WickedPool>);
@@ -1372,10 +1374,10 @@ export function getRegistrationPoolAs(poolId: string, asUserId: string, callback
 /**
  * Retrieve a collection of namespaces for a given registration pool (`poolId`). **Note**: The registration pool
  * must have the `requireNamespace` option set for the namespace functions to be valid to call.
- * 
+ *
  * @param poolId ID of pool to retrieve namespaces for
  * @param options Get retrieval options (paging, filtering)
- * @param callback 
+ * @param callback
  */
 export function getPoolNamespaces(poolId: string, options: WickedGetCollectionOptions): Promise<WickedCollection<WickedNamespace>>;
 export function getPoolNamespaces(poolId: string, options: WickedGetCollectionOptions, callback: Callback<WickedCollection<WickedNamespace>>);
@@ -1394,10 +1396,10 @@ export function getPoolNamespacesAs(poolId: string, options: WickedGetCollection
 /**
  * Retrieve information on a specific namespace of a specific registration pool. Namespaces are usually
  * mapped to things like "tenants", so the description of a namespace can be a tenant name or similar.
- * 
+ *
  * @param poolId ID of pool to retrieve a namespace for
  * @param namespaceId ID of namespace to retrieve
- * @param callback 
+ * @param callback
  */
 export function getPoolNamespace(poolId: string, namespaceId: string): Promise<WickedNamespace>;
 export function getPoolNamespace(poolId: string, namespaceId: string, callback: Callback<WickedNamespace>);
@@ -1414,11 +1416,11 @@ export function getPoolNamespaceAs(poolId: string, namespaceId: string, asUserId
 /**
  * Upsert a namespace in a specific registration pool. In order to create registrations for a specific
  * namespace, this function has to have been called for the namespace which is to be used.
- * 
+ *
  * @param poolId ID of pool to which the namespace to upsert belongs
  * @param namespaceId Id of namespace to upsert
  * @param namespaceInfo New namespace data to store for this namespace
- * @param callback 
+ * @param callback
  */
 export function upsertPoolNamespace(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace): Promise<any>;
 export function upsertPoolNamespace(poolId: string, namespaceId: string, namespaceInfo: WickedNamespace, callback: ErrorCallback);
@@ -1435,10 +1437,10 @@ export function upsertPoolNamespaceAs(poolId: string, namespaceId: string, names
 /**
  * Delete a registration pool namespace. Subsequently, it cannot be used to create or enumerate
  * registrations.
- * 
+ *
  * @param poolId ID of pool to which the namespace to delete belongs
  * @param namespaceId ID of namespace to delete
- * @param callback 
+ * @param callback
  */
 export function deletePoolNamespace(poolId: string, namespaceId: string): Promise<any>;
 export function deletePoolNamespace(poolId: string, namespaceId: string, callback: ErrorCallback);
@@ -1459,10 +1461,10 @@ export function deletePoolNamespaceAs(poolId: string, namespaceId: string, asUse
  * parameter to retrieve registrations for specific namespaces. Please note that the `namespace` option is required
  * for registration pools which requires namespaces, and is forbidden for registration pools which do not require
  * namespaces.
- * 
+ *
  * @param poolId ID of registration pool to retrieve registrations for
  * @param options Get options, e.g. namespace filtering, generic filtering and paging
- * @param callback 
+ * @param callback
  */
 export function getPoolRegistrations(poolId: string, options: WickedGetRegistrationOptions): Promise<WickedCollection<WickedRegistration>>;
 export function getPoolRegistrations(poolId: string, options: WickedGetRegistrationOptions, callback: Callback<WickedCollection<WickedRegistration>>);
@@ -1486,10 +1488,10 @@ export function getPoolRegistrationsAs(poolId: string, options: WickedGetRegistr
  * registrations for a single registration pool in case the registration pool requires
  * namespaces (but only one registration per namespace). In case the registration pool does not
  * require/support namespaces, the result will be an array of eiher 0 or 1 elements.
- * 
+ *
  * @param poolId ID of pool for which to retrieve a user's registrations
  * @param userId ID of user to retrieve registrations for
- * @param callback 
+ * @param callback
  */
 export function getUserRegistrations(poolId: string, userId: string): Promise<WickedCollection<WickedRegistration>>;
 export function getUserRegistrations(poolId: string, userId: string, callback: Callback<WickedCollection<WickedRegistration>>);
@@ -1508,11 +1510,11 @@ export function getUserRegistrationsAs(poolId: string, userId: string, asUserId:
  * the `userRegistration` object **must** contain a `namespace` property. Vice versa, if the registration
  * pool does not require/support namespaces, the `userRegistration` object must **not** contain
  * a `namespace` property.
- * 
+ *
  * @param poolId ID of pool to upsert a user registration for
  * @param userId ID of user to upsert a registration for
  * @param userRegistration User registration data.
- * @param callback 
+ * @param callback
  */
 export function upsertUserRegistration(poolId: string, userId: string, userRegistration: WickedRegistration): Promise<any>;
 export function upsertUserRegistration(poolId: string, userId: string, userRegistration: WickedRegistration, callback: ErrorCallback);
@@ -1528,11 +1530,11 @@ export function upsertUserRegistrationAs(poolId: string, userId: string, userReg
 
 /**
  * Delete a specific user registration for a given registration pool (and optionally namespace).
- * 
+ *
  * @param poolId ID of registration pool to delete a user registration from
  * @param userId ID of user to delete a registration for
  * @param namespaceId Namespace to delete registration for; for registration pools not requiring a namespace, this must be `null`, otherwise it must be specified
- * @param callback 
+ * @param callback
  */
 export function deleteUserRegistration(poolId: string, userId: string, namespaceId: string): Promise<any>;
 export function deleteUserRegistration(poolId: string, userId: string, namespaceId: string, callback: ErrorCallback);
@@ -1552,9 +1554,9 @@ export function deleteUserRegistrationAs(poolId: string, userId: string, namespa
 
 /**
  * Retrieve a map of all registrations, across all registration pools, a user has.
- * 
+ *
  * @param userId ID of user to retrieve all registrations for.
- * @param callback 
+ * @param callback
  */
 export function getAllUserRegistrations(userId: string): Promise<WickedRegistrationMap>;
 export function getAllUserRegistrations(userId: string, callback: Callback<WickedRegistrationMap>);
@@ -1572,10 +1574,10 @@ export function getAllUserRegistrationsAs(userId: string, asUserId: string, call
 
 /**
  * Retrieve all grants a user has allowed to any application for accessing any API.
- * 
+ *
  * @param userId ID of user to retrieve grants for
  * @param options Get options (filtering, paging,...)
- * @param callback 
+ * @param callback
  */
 export function getUserGrants(userId: string, options: WickedGetOptions): Promise<WickedCollection<WickedGrant>>;
 export function getUserGrants(userId: string, options: WickedGetOptions, callback: Callback<WickedCollection<WickedGrant>>);
@@ -1595,9 +1597,9 @@ export function getUserGrantsAs(userId: string, options: WickedGetOptions, asUse
  * Delete all grants a user has made to any application to access APIs on behalf of himself. After calling this
  * method, any non-trusted application will need to ask permission to the user again to access the user's data on
  * behalf of the user.
- * 
+ *
  * @param userId ID of user to delete all grants for.
- * @param callback 
+ * @param callback
  */
 export function deleteAllUserGrants(userId: string): Promise<any>;
 export function deleteAllUserGrants(userId: string, callback: ErrorCallback);
@@ -1613,11 +1615,11 @@ export function deleteAllUserGrantsAs(userId: string, asUserId: string, callback
 
 /**
  * Retrieve a specific access grant for a specific, user, application and API.
- * 
+ *
  * @param userId ID of user to retrieve a grant for
  * @param applicationId ID of application to retrieve a grant for
  * @param apiId ID of API for which to retrieve the grant
- * @param callback 
+ * @param callback
  */
 export function getUserGrant(userId: string, applicationId: string, apiId: string): Promise<WickedGrant>;
 export function getUserGrant(userId: string, applicationId: string, apiId: string, callback: Callback<WickedGrant>);
@@ -1636,12 +1638,12 @@ export function getUserGrantAs(userId: string, applicationId: string, apiId: str
  * with a specific set of scopes on the user's behalf. This method is foremost used automatically
  * by the Authorization Server after it has asked the user whether a certain application is allowed
  * to access the user's data on the user's behalf.
- * 
+ *
  * @param userId ID of user to upsert a grant for
  * @param applicationId ID of application to upsert a grant for
  * @param apiId ID of API to upsert a grant for
  * @param grantInfo Grant information to store
- * @param callback 
+ * @param callback
  */
 export function upsertUserGrant(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant): Promise<any>;
 export function upsertUserGrant(userId: string, applicationId: string, apiId: string, grantInfo: WickedGrant, callback: ErrorCallback);
@@ -1657,11 +1659,11 @@ export function upsertUserGrantAs(userId: string, applicationId: string, apiId: 
 
 /**
  * Delete a user's grant of access to a specific application and API.
- * 
+ *
  * @param userId ID of user of which to delete a grant
  * @param applicationId ID of application of which to delete a grant
  * @param apiId ID of API to delete a grant for
- * @param callback 
+ * @param callback
  */
 export function deleteUserGrant(userId: string, applicationId: string, apiId: string): Promise<any>;
 export function deleteUserGrant(userId: string, applicationId: string, apiId: string, callback: ErrorCallback);
@@ -1679,10 +1681,10 @@ export function deleteUserGrantAs(userId: string, applicationId: string, apiId: 
 
 /**
  * Express middleware implementation of a correlation ID handler; it inserts
- * a header `Correlation-Id` if it's not already present and passes it on to the 
+ * a header `Correlation-Id` if it's not already present and passes it on to the
  * wicked API. In case a header is already present, it re-uses the content. The
  * usual format of the correlation ID is a UUID.
- * 
+ *
  * Usage: `app.use(wicked.correlationIdHandler());`
  */
 export function correlationIdHandler(): ExpressHandler {
