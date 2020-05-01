@@ -10,7 +10,9 @@
   ],
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -29,7 +31,8 @@
     "debug": "3.1.0",
     "node-uuid": "1.4.7",
     "request": "2.88.0",
-    "semver": "5.6.0"
+    "semver": "5.6.0",
+    "snyk": "^1.316.1"
   },
   "jshintConfig": {
     "node": true,
@@ -37,5 +40,6 @@
   },
   "devDependencies": {
     "typescript": "3.4.1"
-  }
+  },
+  "snyk": true
 }
