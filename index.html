@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<title>wicked-sdk</title>
-	<meta name="description" content="">
+	<meta name="description" content="Documentation for wicked-sdk">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
 </head>
@@ -13,7 +13,7 @@
 	<div class="tsd-page-toolbar">
 		<div class="container">
 			<div class="table-wrap">
-				<div class="table-cell" id="tsd-search" data-index="assets/js/search.js" data-base=".">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
 					<div class="field">
 						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
 						<input id="tsd-search-field" type="text" />
@@ -56,7 +56,7 @@
 					<a href="globals.html">Globals</a>
 				</li>
 			</ul>
-			<h1> wicked-sdk</h1>
+			<h1>wicked-sdk</h1>
 		</div>
 	</div>
 </header>
@@ -64,11 +64,17 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<h1 id="wicked-haufe-io-sdk">wicked.haufe.io SDK</h1>
-				<h2 id="disclaimer">DISCLAIMER</h2>
+				<a href="#wickedhaufeio-sdk" id="wickedhaufeio-sdk" style="color: inherit; text-decoration: none;">
+					<h1>wicked.haufe.io SDK</h1>
+				</a>
+				<a href="#disclaimer" id="disclaimer" style="color: inherit; text-decoration: none;">
+					<h2>DISCLAIMER</h2>
+				</a>
 				<p><strong>IMPORTANT</strong>: This is the documentation of the wicked.haufe.io node SDK as of version 1.0.0! It will <strong>NOT</strong> work with previous versions of wicked.haufe.io.</p>
 				<p>Full documentation at <a href="https://apim-haufe-io.github.io/wicked.node-sdk/">apim-haufe-io.github.com/wicked.node-sdk</a>.</p>
-				<h2 id="introduction">Introduction</h2>
+				<a href="#introduction" id="introduction" style="color: inherit; text-decoration: none;">
+					<h2>Introduction</h2>
+				</a>
 				<p>This node.js module is an SDK for building plugins and additions to the wicked.haufe.io API Management system.</p>
 				<p>You can find more information on wicked.haufe.io here:</p>
 				<ul>
@@ -85,44 +91,50 @@
 				<p>It may be used for simpler interaction with the wicked User Management API, e.g. for creating users and registrations
 					from the outside, and not using the wicked Portal UI. This makes using wicked as an Identity Provider for your own
 				applications a lot easier.</p>
-				<h1 id="usage">Usage</h1>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h1>Usage</h1>
+				</a>
 				<p>To install the SDK into your node.js application, run</p>
 				<pre><code class="language-bash">$ npm install wicked-sdk --save --save-exact</code></pre>
 				<p>The common initialization of the wicked SDK is like this, creating a machine user for the component which uses the wicked SDK to enable admin
 				access to the wicked API directly from your node.js, including type declarations:</p>
-				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> <span class="hljs-keyword">async</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">'async'</span>);
-<span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
+				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> <span class="hljs-keyword">async</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;async&#x27;</span>);
+<span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;wicked-sdk&#x27;</span>);
 
 <span class="hljs-keyword">const</span> wickedOptions = {
-    <span class="hljs-attr">userAgentName</span>: <span class="hljs-string">'your-component'</span>,
-    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">'1.0.0'</span>,
+    <span class="hljs-attr">userAgentName</span>: <span class="hljs-string">&#x27;your-component&#x27;</span>,
+    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">&#x27;1.0.0&#x27;</span>,
     <span class="hljs-attr">apiMaxTries</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// optional, defaults to 10</span>
-    apiRetryDelay: <span class="hljs-number">500</span>, <span class="hljs-comment">// optional, defaults to 500</span>
+    <span class="hljs-attr">apiRetryDelay</span>: <span class="hljs-number">500</span>, <span class="hljs-comment">// optional, defaults to 500</span>
 };
 
 <span class="hljs-comment">// Init wicked SDK and register a machine user.</span>
 <span class="hljs-keyword">async</span>.series([
     <span class="hljs-function"><span class="hljs-params">callback</span> =&gt;</span> wicked.initialize(wickedOptions, callback),
-    callback =&gt; wicked.initMachineUser(<span class="hljs-string">'yourcomponent'</span>, callback),
+    <span class="hljs-function"><span class="hljs-params">callback</span> =&gt;</span> wicked.initMachineUser(<span class="hljs-string">&#x27;yourcomponent&#x27;</span>, callback),
 ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err</span>) </span>{
     <span class="hljs-keyword">if</span> (err) {
-        debug(<span class="hljs-string">'Failed waiting for API.'</span>);
+        debug(<span class="hljs-string">&#x27;Failed waiting for API.&#x27;</span>);
         <span class="hljs-keyword">throw</span> err;
     }
 
     <span class="hljs-comment">// Remember some URLs</span>
-    app.set(<span class="hljs-string">'api_url'</span>, wicked.getInternalApiUrl());
+    app.set(<span class="hljs-string">&#x27;api_url&#x27;</span>, wicked.getInternalApiUrl());
     ...
 
     <span class="hljs-comment">// Now you can use wicked as you wish.</span>
-    wicked.getUserRegistrations(<span class="hljs-string">'regpool'</span>, someUserId, (err, registrationCollection) =&gt; {
+    wicked.getUserRegistrations(<span class="hljs-string">&#x27;regpool&#x27;</span>, someUserId, <span class="hljs-function">(<span class="hljs-params">err, registrationCollection</span>) =&gt;</span> {
         <span class="hljs-keyword">if</span> (err) <span class="hljs-comment">// ...</span>
 
         <span class="hljs-comment">//</span>
     });
 });</code></pre>
-				<h2 id="interface-description">Interface description</h2>
-				<h3 id="initialization-functionality">Initialization Functionality</h3>
+				<a href="#interface-description" id="interface-description" style="color: inherit; text-decoration: none;">
+					<h2>Interface description</h2>
+				</a>
+				<a href="#initialization-functionality" id="initialization-functionality" style="color: inherit; text-decoration: none;">
+					<h3>Initialization Functionality</h3>
+				</a>
 				<p>The <code>initialize()</code> function waits for the wicked API to be available and returns a <code>null</code> error if successful, otherwise an error message. If you want to change the way the SDK waits for the Portal API, you may supply <code>options</code> as <a href="interfaces/_interfaces_.wickedinitoptions.html">WickedInitOptions</a>.</p>
 				<p>The <code>initialize()</code> call will look for the Portal API URL in the following way:</p>
 				<ul>
@@ -131,17 +143,27 @@
 					<li>Otherwise, if the environment is Windows or Mac, it will assume a local development environment, and use <code>http://localhost:3001</code></li>
 				</ul>
 				<p>Please consider this behaviour when deploying your own applications alongside of wicked, and pass in the correct <code>PORTAL_API_URL</code> so that the SDK can retrieve the correct settings automatically from the wicked API.</p>
-				<h3 id="machine-users">Machine Users</h3>
+				<a href="#machine-users" id="machine-users" style="color: inherit; text-decoration: none;">
+					<h3>Machine Users</h3>
+				</a>
 				<p>It is convenient to use the <a href="modules/_index_.html#initmachineuser"><code>initMachineUser</code></a> function to create a machine user for your component to use to talk with the wicked API. <strong>IMPORTANT</strong>: Automatically, this machine user will have complete and full admin rights to the wicked API, so that you must handle this user with care, and e.g. not tunnel calls directly from an end user to the wicked API. This end user would then automatically have admin rights in wicked, which probably is not what you want.</p>
-				<h3 id="sdk-functionality">SDK functionality</h3>
+				<a href="#sdk-functionality" id="sdk-functionality" style="color: inherit; text-decoration: none;">
+					<h3>SDK functionality</h3>
+				</a>
 				<p>The functions this SDK offers can best be viewed on the <a href="modules/_index_.html">wicked SDK index page</a>.</p>
 				<p>Most functions have two different versions: One simple version which automatically uses the machine user identity, and one function suffixed <code>As</code>, which takes an additional user ID so that this function can also be called in the context of a different user. In most cases, these functions aren&#39;t needed, but it may be necessary to use them. Either to show on behalf of whom an action on the wicked API was done, or to reduce risk by not using the machine user.</p>
-				<h3 id="api-interaction">API Interaction</h3>
+				<a href="#api-interaction" id="api-interaction" style="color: inherit; text-decoration: none;">
+					<h3>API Interaction</h3>
+				</a>
 				<p>As mentioned above, the entire wicked API is encapsulated in this SDK, so that it&#39;s usually not necessary to call the API directly, using any of the generic purpose <code>apiGet</code>, <code>apiPost</code>, <code>apiDelete</code>, <code>apiPatch</code> and <code>apiPut</code> functions. It is recommended to rather use the dedicated functions, as they also contain type information of the return values. This is especially useful if you are already developing using TypeScript, but also from JavaScript certain editors can take advantage of the type information (e.g. Visual Studio Code).</p>
 				<p><strong>IMPORTANT</strong>: As of version 0.11.0 of the wicked SDK, the SDK will continuously poll the <code>/confighash</code> end point of the portal API to detect configuration changes. Changes are detected by comparing the <code>confighash</code> retrieved at initialization (the SDK does this as a default) with the current value returned by <code>/confighash</code>. In case the values do not match, the SDK will <strong>forcefully exit the entire node process in order to make the component restart and retrieve a new configuration</strong>.</p>
 				<p>In case you do not want this behavior, but rather would want to control yourself when to restart or reconfigure your component, specify <code>doNotPollConfigHash: true</code> in the initialization options (see above).</p>
-				<h2 id="convenience-functionality">Convenience Functionality</h2>
-				<h3 id="wicked-correlationidhandler-"><code>wicked.correlationIdHandler()</code></h3>
+				<a href="#convenience-functionality" id="convenience-functionality" style="color: inherit; text-decoration: none;">
+					<h2>Convenience Functionality</h2>
+				</a>
+				<a href="#wickedcorrelationidhandler" id="wickedcorrelationidhandler" style="color: inherit; text-decoration: none;">
+					<h3><code>wicked.correlationIdHandler()</code></h3>
+				</a>
 				<p>The wicked SDK comes with a <a href="modules/_index_.html#correlationidhandler">correlation ID handler</a> you can use as an express middleware. It will do the following thing:</p>
 				<ul>
 					<li>For incoming requests, check whether there is a header <code>correlation-id</code>, and if so, store that internally in the SDK, and in the <code>req.correlationId</code> property</li>
@@ -150,41 +172,43 @@
 				</ul>
 				<p>Upstream wicked functionality will pick up this header and display it in logs.</p>
 				<p><strong>Usage</strong>:</p>
-				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
-<span class="hljs-keyword">const</span> app = <span class="hljs-built_in">require</span>(<span class="hljs-string">'express'</span>)();
+				<pre><code class="language-javascript"><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;wicked-sdk&#x27;</span>);
+<span class="hljs-keyword">const</span> app = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;express&#x27;</span>)();
 
 app.use(wicked.correlationIdHandler());
 <span class="hljs-comment">// ...</span></code></pre>
-				<h2 id="promise-support">Promise support</h2>
+				<a href="#promise-support" id="promise-support" style="color: inherit; text-decoration: none;">
+					<h2>Promise support</h2>
+				</a>
 				<p>All functions have an overload which also supports returning a promise instead of using the callback. If you do not supply the <code>callback</code> parameter, all functions will return a <code>Promise</code> instead.</p>
 				<p><strong>Example</strong>:</p>
-				<pre><code><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">'wicked-sdk'</span>);
+				<pre><code><span class="hljs-keyword">const</span> wicked = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;wicked-sdk&#x27;</span>);
 
 <span class="hljs-keyword">const</span> wickedOptions = {
-    <span class="hljs-attr">userAgentName</span>: <span class="hljs-string">'your-component'</span>,
-    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">'1.0.0'</span>,
+    <span class="hljs-attr">userAgentName</span>: <span class="hljs-string">&#x27;your-component&#x27;</span>,
+    <span class="hljs-attr">userAgentVersion</span>: <span class="hljs-string">&#x27;1.0.0&#x27;</span>,
     <span class="hljs-attr">apiMaxTries</span>: <span class="hljs-number">10</span>, <span class="hljs-comment">// optional, defaults to 10</span>
-    apiRetryDelay: <span class="hljs-number">500</span>, <span class="hljs-comment">// optional, defaults to 500</span>
+    <span class="hljs-attr">apiRetryDelay</span>: <span class="hljs-number">500</span>, <span class="hljs-comment">// optional, defaults to 500</span>
 };
 
-<span class="hljs-comment">// You wouldn't do it like this, this is just an example.</span>
+<span class="hljs-comment">// You wouldn&#x27;t do it like this, this is just an example.</span>
 (<span class="hljs-keyword">async</span> () =&gt; {
     <span class="hljs-comment">// Init wicked SDK and register a machine user.</span>
     <span class="hljs-keyword">try</span> {
         <span class="hljs-keyword">const</span> wickedGlobals = <span class="hljs-keyword">await</span> wicked.initialize(wickedOptions);
-        <span class="hljs-keyword">await</span> wicked.initMachineUser(<span class="hljs-string">'yourcomponent'</span>);
+        <span class="hljs-keyword">await</span> wicked.initMachineUser(<span class="hljs-string">&#x27;yourcomponent&#x27;</span>);
     } <span class="hljs-keyword">catch</span> (err) {
-        <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Failed to initialize wicked:'</span>);
+        <span class="hljs-built_in">console</span>.error(<span class="hljs-string">&#x27;Failed to initialize wicked:&#x27;</span>);
         <span class="hljs-built_in">console</span>.error(err);
         <span class="hljs-keyword">throw</span> err;
     }
 
     <span class="hljs-comment">// Remember some URLs</span>
-    app.set(<span class="hljs-string">'api_url'</span>, wicked.getInternalApiUrl());
+    app.set(<span class="hljs-string">&#x27;api_url&#x27;</span>, wicked.getInternalApiUrl());
     ...
 
     <span class="hljs-comment">// Now you can use wicked as you wish.</span>
-    <span class="hljs-keyword">const</span> registrationCollection = <span class="hljs-keyword">await</span> wicked.getUserRegistrations(<span class="hljs-string">'regpool'</span>, someUserId);
+    <span class="hljs-keyword">const</span> registrationCollection = <span class="hljs-keyword">await</span> wicked.getUserRegistrations(<span class="hljs-string">&#x27;regpool&#x27;</span>, someUserId);
     <span class="hljs-comment">// ...</span>
 })();</code></pre>
 			</div>
@@ -195,23 +219,26 @@ app.use(wicked.correlationIdHandler());
 					<li class="globals  ">
 						<a href="globals.html"><em>Globals</em></a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_implementation_.html">"implementation"</a>
+					<li class=" tsd-kind-module">
+						<a href="modules/_implementation_.html">&quot;implementation&quot;</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_index_.html">"index"</a>
+					<li class=" tsd-kind-module">
+						<a href="modules/_index_.html">&quot;index&quot;</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_interfaces_.html">"interfaces"</a>
+					<li class=" tsd-kind-module">
+						<a href="modules/_interfaces_.html">&quot;interfaces&quot;</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_kong_.html">"kong"</a>
+					<li class=" tsd-kind-module">
+						<a href="modules/_kong_.html">&quot;kong&quot;</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_kong_interfaces_.html">"kong-<wbr>interfaces"</a>
+					<li class=" tsd-kind-module">
+						<a href="modules/_kong_interfaces_.html">&quot;kong-<wbr>interfaces&quot;</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_wicked_error_.html">"wicked-<wbr>error"</a>
+					<li class=" tsd-kind-module">
+						<a href="modules/_nothing_.html">&quot;nothing&quot;</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/_wicked_error_.html">&quot;wicked-<wbr>error&quot;</a>
 					</li>
 				</ul>
 			</nav>
@@ -227,62 +254,25 @@ app.use(wicked.correlationIdHandler());
 		<h2>Legend</h2>
 		<div class="tsd-legend-group">
 			<ul class="tsd-legend">
-				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
 				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
 				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
 				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
-				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
-				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
-				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
-				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
 				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
-				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
-				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
-				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
-				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
-				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
-				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
-			</ul>
-			<ul class="tsd-legend">
-				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
-				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
 			</ul>
 		</div>
 	</div>
 </footer>
 <div class="container tsd-generator">
-	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
 </div>
 <div class="overlay"></div>
 <script src="assets/js/main.js"></script>
